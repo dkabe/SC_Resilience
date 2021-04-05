@@ -16,4 +16,3 @@ a_i = np.ones(Manufacturing_plants)
 b_i = np.ones(Distribution)
 
 # Demand
-Demand = 
