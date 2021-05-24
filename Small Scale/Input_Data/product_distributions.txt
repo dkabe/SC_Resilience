@@ -1,0 +1,8 @@
+p1_mean = 49.74
+p2_mean = 46.58
+p3_mean = 50.78
+p4_mean = 46.04
+p1_sd = 10
+p2_sd = 6
+p3_sd = 2
+p4_sd = 8
