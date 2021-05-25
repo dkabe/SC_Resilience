@@ -1,7 +1,7 @@
-p1_mean = 49.74
-p2_mean = 46.58
-p3_mean = 50.78
-p4_mean = 46.04
+p1_mean = 49.74*15
+p2_mean = 46.58*15
+p3_mean = 50.78*15
+p4_mean = 46.04*15
 p1_sd = 10
 p2_sd = 6
 p3_sd = 2
