@@ -1,0 +1,11 @@
+import math
+num_cust = 50
+
+p1_mean = 49.74*num_cust
+p2_mean = 46.58*num_cust
+p3_mean = 50.78*num_cust
+p4_mean = 46.04*num_cust
+p1_sd = 10*math.sqrt(num_cust)
+p2_sd = 6*math.sqrt(num_cust)
+p3_sd = 2*math.sqrt(num_cust)
+p4_sd = 8*math.sqrt(num_cust)
