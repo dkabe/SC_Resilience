@@ -191,7 +191,7 @@ def SolveModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, 
     Summary_dict["OpenMPs"] = np.sum(v_val_x_i.values())
     Summary_dict["OpenDCs"] = np.sum(v_val_x_j.values())
     Cost_dict["Opening"] =  get_opening_costs(v_val_x_i, v_val_x_j, Manufacturing_plants, Distribution)
-    Cost_dict["f2"] = np.round(get_rl_rate(v_val_w, instance, num_Scenarios, Market, Products))
+    Cost_dict["f4"] = np.round(get_rl_rate(v_val_w, instance, num_Scenarios, Market, Products), 2)
 
     for s in range(num_Scenarios):
         Summary_dict["Purchasing_" + str(s)] = sum([v_val_V1_lm[(s,m,l)] +  v_val_V2_lm[(s,m,l)] for m in range(Products) for l in range(Outsourced)])
@@ -214,14 +214,22 @@ def SolveModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, 
     OutsourceShipping = np.sum([Cost_dict['OutsourceShipping_' + str(s)] for s in range(num_Scenarios)])
 
     f1_cost = 0
+    f2_cost = 0
+    f3_cost = 0
     for s in range(num_Scenarios):
-        f1_cost += Probabilities[instance][s]*(Cost_dict['Purchasing_' + str(s)] + Cost_dict['Production_' + str(s)] + \
-                         Cost_dict['LostSales_' + str(s)] + Cost_dict['InHouseShipping_' + str(s)] + Cost_dict['OutsourceShipping_' + str(s)])
-    Cost_dict["f1"] = np.round(Cost_dict["Opening"] + f1_cost)
-    print('Cost: ', Cost_dict["f1"])
-    print('Demand Penalties: ', Cost_dict["f2"])
-    print('Demand purchased from outsourcing: ', np.sum([Summary_dict["Purchasing_" + str(s)] for s in range(num_Scenarios)])/np.sum(demand[:num_Scenarios,:,:Market]))
-    print('Demand being met: ', np.sum([Summary_dict["Purchasing_" + str(s)] + Summary_dict["Production_" + str(s)] for s in range(num_Scenarios)])/np.sum(demand[:num_Scenarios,:,:Market]))
+        f1_cost += Probabilities[instance][s]*(Cost_dict['Production_' + str(s)] + Cost_dict['InHouseShipping_' + str(s)])
+        f2_cost += Probabilities[instance][s]*(Cost_dict['Purchasing_' + str(s)] + Cost_dict['OutsourceShipping_' + str(s)])
+        f3_cost +=  Probabilities[instance][s]*Cost_dict['LostSales_' + str(s)]
+    Cost_dict["f1"] = np.round(Cost_dict["Opening"] + f1_cost, 2) # in house (opening + production + shipping)
+    Cost_dict["f2"] = np.round(f2_cost, 2) # Outsourcing # (purchasing + shipping)
+    Cost_dict["f3"] = np.round(f3_cost, 2) # lost sales
+
+    print('In house Cost: ', Cost_dict["f1"])
+    print('Outsource Cost: ', Cost_dict["f2"])
+    print('Lost Sales: ', Cost_dict["f3"])
+    print('Demand Penalties: ', Cost_dict["f4"])
+    print('Demand purchased from outsourcing: ', np.sum([Probabilities[instance][s]*Summary_dict["Purchasing_" + str(s)]/np.sum(demand[s]) for s in range(num_Scenarios)]))
+    print('Demand being met: ', np.sum([Probabilities[instance][s]*(Summary_dict["Purchasing_" + str(s)] + Summary_dict["Production_" + str(s)])/np.sum(demand[s]) for s in range(num_Scenarios)]))
 
     return
 
@@ -431,6 +439,29 @@ def get_lost_cost(scen, U, Market, Products):
             l_cost += lost_sales[k][m]*U[scen,k,m]
 
     return(np.round(l_cost))
+
+def get_outsourced_cost(scen, V1, V2, T1, T2, Distribution, Products, Outsourced, Market):
+    # Buying from outsource cost
+    b_cost = 0
+    ship_to_distribution = 0
+    ship_to_market = 0
+    for l in range(Outsourced):
+        for m in range(Products):
+            b_cost += Supplier_cost[0][m][l]*V1[scen,m,l] + Supplier_cost[1][m][l]*V2[scen,m,l]
+
+    # Shipping from outsourced cost
+    for l in range(Outsourced):
+        for j in range(Distribution):
+            for m in range(Products):
+                ship_to_distribution += T_O_DC[m][l][j]*T1[scen,m,l,j]
+
+    for l in range(Outsourced):
+        for k in range(Market):
+            for m in range(Products):
+                ship_to_market += T_O_MZ[m][l][k]*T2[scen,m,l,k]
+
+    total_outsourcing = b_cost + ship_to_distribution + ship_to_market
+    return(total_outsourcing)
 
 def get_rl_rate(w, instance, num_Scenarios, Market, Products):
     rl_penalty = 0
