@@ -10,10 +10,9 @@ import itertools
 
 # Read input files
 path = "C:/Users/Devika Kabe/Documents/Model_brainstorming/Input_Data/"
-p_failure = 0.25
+p_failure = 0.1
 p_running = 1 - p_failure
 instances = 4
-epsilon = 600
 num_samples = 200
 Products = 2
 Outsourced = 2
@@ -87,6 +86,7 @@ for i in range(instances):
         p_i = (p_running**(np.sum(Scen[s][0]) + np.sum(Scen[s][1])))*(p_failure**(Manufacturing_plants[i] + Distribution[i] - (np.sum(Scen[s][0]) + np.sum(Scen[s][1]))))
         p_scen.append(p_i)
     if len(Scen) > num_samples:
+        random.seed(0)
         indices = random.sample(range(len(Scen)), num_samples)
         Scen = [Scen[index] for index in indices]
         p_scen = [p_scen[index] for index in indices]
@@ -122,7 +122,7 @@ dic_grbOut = {}
 
 grbModel = Model('stochasticResil')
 
-def SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced):
+def SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon):
 
     for i in range(Manufacturing_plants):
         x_i[i] = grbModel.addVar(vtype = GRB.BINARY)
@@ -180,12 +180,13 @@ def SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distributi
                 w_s[s,k,m] = grbModel.addVar(vtype = GRB.CONTINUOUS)
 
     SetGrb_Obj(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced)
-    ModelCons(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced)
+    ModelCons(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon)
 
 def SolveModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced):
     grbModel.params.OutputFlag = 0
+    grbModel.params.timelimit = 600
     grbModel.optimize()
-
+    gap = grbModel.MIPGAP
     # get variable values
     v_val_x_i = grbModel.getAttr('x', x_i)
     v_val_x_j = grbModel.getAttr('x', x_j)
@@ -244,9 +245,11 @@ def SolveModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, 
     print('Outsource Cost: ', Cost_dict["f2"])
     print('Lost Sales: ', Cost_dict["f3"])
     print('Demand Penalties: ', Cost_dict["f4"])
-    print('Demand purchased from outsourcing: ', np.sum([Probabilities[instance][s]*Summary_dict["Purchasing_" + str(s)]/np.sum(demand[instance][s]) for s in range(num_Scenarios)]))
-    print('Demand being met: ', np.sum([Probabilities[instance][s]*(Summary_dict["Purchasing_" + str(s)] + Summary_dict["Production_" + str(s)])/np.sum(demand[instance][s]) for s in range(num_Scenarios)]))
+    print('Weighted Demand purchased from outsourcing: ', np.sum([Probabilities[instance][s]*Summary_dict["Purchasing_" + str(s)]/np.sum(demand[instance][s]) for s in range(num_Scenarios)]))
+    #print('Unweighted Demand purchased from outsourcing: ', np.mean([Summary_dict["Purchasing_" + str(s)]/np.sum(demand[instance][s]) for s in range(num_Scenarios)]))
 
+    print('Demand being met: ', np.sum([Probabilities[instance][s]*(Summary_dict["Purchasing_" + str(s)] + Summary_dict["Production_" + str(s)])/np.sum(demand[instance][s]) for s in range(num_Scenarios)]))
+    print('Gap: ', gap)
     return
 
 # Objective
@@ -335,7 +338,7 @@ def SetGrb_Obj(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, 
 
     # Model Constraints
 
-def ModelCons(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced):
+def ModelCons(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon):
 
     # Network Flow
 
@@ -488,9 +491,9 @@ def get_rl_rate(w, instance, num_Scenarios, Market, Products):
 
     return(rl_penalty)
 
-def run_Model(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, objDict):
+def run_Model(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, objDict):
     for key, value in objDict.items():
         objWeights[key] = value
 
-    SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced)
+    SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon)
     SolveModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced)
