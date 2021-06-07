@@ -9,7 +9,8 @@ import matplotlib.pyplot as plt
 import itertools
 
 # Read input files
-path = "C:/Users/Devika Kabe/Documents/Model_brainstorming/Input_Data/"
+#path = "C:/Users/Devika Kabe/Documents/Model_brainstorming/Input_Data/"
+path = "/home/dkabe/Model_brainstorming/Input_Data/"
 p_failure = 0.1
 p_running = 1 - p_failure
 instances = 4
@@ -22,8 +23,6 @@ Manufacturing_plants = [2, 3, 4, 6]
 Distribution = [3, 4, 6, 8]
 Market = [1, 2, 3, 5]
 numScenarios = [32, 128, 200, 200]
-
-path = "C:/Users/Devika Kabe/Documents/Model_brainstorming/Input_Data/"
 
 # volume of product (not instance based)
 volume = np.loadtxt(path + 'Instance_1/Volume_1.txt')
