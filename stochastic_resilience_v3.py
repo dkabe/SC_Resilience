@@ -199,11 +199,7 @@ def SolveModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, 
     v_val_T_lkm = grbModel.getAttr('x', T_lkm)
     v_val_w = grbModel.getAttr('x', w_s)
 
-    obj = grbModel.getObjective()
-    print("obj val: ", obj.getValue())
-    print("Opening Decisions: ", sum(v_val_x_i.values()), sum(v_val_x_j.values()))
-
-    Summary_dict['ObjVal'] = grbModel.objval
+    Summary_dict['ObjVal'] = np.round(grbModel.objval,2)
     Summary_dict["OpenMPs"] = np.sum(v_val_x_i.values())
     Summary_dict["OpenDCs"] = np.sum(v_val_x_j.values())
     Cost_dict["Opening"] =  get_opening_costs(instance, v_val_x_i, v_val_x_j, Manufacturing_plants, Distribution)
@@ -221,13 +217,7 @@ def SolveModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, 
         Cost_dict["OutsourceShipping_" + str(s)] = get_shipping_costs(instance, s,v_val_Y_ijm, v_val_Z_jkm, v_val_T_ljm, v_val_T_lkm, Manufacturing_plants, Distribution, Products, Market, Outsourced)[1]
         Cost_dict["Production_" + str(s)] = get_production_cost(instance, s,v_val_Q_im, Manufacturing_plants, Products)
         Cost_dict["Purchasing_" + str(s)] = get_purchase_costs(s,v_val_V1_lm, v_val_V2_lm, Outsourced, Products)
-        Cost_dict["LostSales_" + str(s)] = get_lost_cost(instance, s,v_val_U_km, Market, Products)
-
-    Purchasing_cost = np.sum([Cost_dict['Purchasing_' + str(s)] for s in range(num_Scenarios)])
-    Production_cost = np.sum([Cost_dict['Production_' + str(s)] for s in range(num_Scenarios)])
-    LostSales_cost = np.sum([Cost_dict['LostSales_' + str(s)] for s in range(num_Scenarios)])
-    InHouseShipping = np.sum([Cost_dict['InHouseShipping_' + str(s)] for s in range(num_Scenarios)])
-    OutsourceShipping = np.sum([Cost_dict['OutsourceShipping_' + str(s)] for s in range(num_Scenarios)])
+        Cost_dict["LostSales_" + str(s)] = get_lost_cost(instance, s,v_val_U_km, Market, Products)    
 
     f1_cost = 0
     f2_cost = 0
@@ -239,15 +229,17 @@ def SolveModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, 
     Cost_dict["f1"] = np.round(Cost_dict["Opening"] + f1_cost, 2) # in house (opening + production + shipping)
     Cost_dict["f2"] = np.round(f2_cost, 2) # Outsourcing # (purchasing + shipping)
     Cost_dict["f3"] = np.round(f3_cost, 2) # lost sales
-
+    Summary_dict['Demand_met'] = np.sum([Probabilities[instance][s]*(Summary_dict["Purchasing_" + str(s)] + Summary_dict["Production_" + str(s)])/np.sum(demand[instance][s]) for s in range(num_Scenarios)])
+    Summary_dict['Demand_outsourced'] = np.sum([Probabilities[instance][s]*Summary_dict["Purchasing_" + str(s)]/np.sum(demand[instance][s]) for s in range(num_Scenarios)])
+    print("obj val: ", Summary_dict['ObjVal'])
+    print("Opening Decisions: ", sum(v_val_x_i.values()), sum(v_val_x_j.values()))
     print('In house Cost: ', Cost_dict["f1"])
     print('Outsource Cost: ', Cost_dict["f2"])
     print('Lost Sales: ', Cost_dict["f3"])
     print('Demand Penalties: ', Cost_dict["f4"])
-    print('Weighted Demand purchased from outsourcing: ', np.sum([Probabilities[instance][s]*Summary_dict["Purchasing_" + str(s)]/np.sum(demand[instance][s]) for s in range(num_Scenarios)]))
     #print('Unweighted Demand purchased from outsourcing: ', np.mean([Summary_dict["Purchasing_" + str(s)]/np.sum(demand[instance][s]) for s in range(num_Scenarios)]))
-
-    print('Demand being met: ', np.sum([Probabilities[instance][s]*(Summary_dict["Purchasing_" + str(s)] + Summary_dict["Production_" + str(s)])/np.sum(demand[instance][s]) for s in range(num_Scenarios)]))
+    print('Demand being met: ', Summary_dict['Demand_met'])
+    print('Weighted Demand purchased from outsourcing: ', Summary_dict['Demand_outsourced'])
     print('Gap: ', gap)
     return
 
@@ -490,9 +482,21 @@ def get_rl_rate(w, instance, num_Scenarios, Market, Products):
 
     return(rl_penalty)
 
+def PrintToFileSummaryResults():
+    results_file = "/home/dkabe/Model_brainstorming/Output/results.txt"
+    ff = open(results_file, "a")
+    ff.write(str(Summary_dict['ObjVal']) + '\t' + str(Cost_dict['f1']) + '\t' + str(Cost_dict['f2']) + '\t' + str(Cost_dict['f3']) + '\t' + str(Cost_dict['f4']) + '\t')
+    ff.write(str(Summary_dict['Demand_met']) + '\t' + str(Summary_dict['Demand_outsourced']) + '\t')
+    ff.write(str(Summary_dict['OpenMPs']) + '\t' + str(Summary_dict['OpenDCs']))
+    ff.write('\n')
+    ff.close()
+    return
+
+
 def run_Model(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, objDict):
     for key, value in objDict.items():
         objWeights[key] = value
 
     SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon)
     SolveModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced)
+    PrintToFileSummaryResults()
