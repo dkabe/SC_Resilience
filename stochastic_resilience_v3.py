@@ -1,4 +1,5 @@
 import math
+import time
 import numpy as np
 import random
 from random import randint
@@ -184,6 +185,7 @@ def SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distributi
 def SolveModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced):
     grbModel.params.OutputFlag = 0
     grbModel.params.timelimit = 600
+    start_time = time.time()
     grbModel.optimize()
     gap = grbModel.MIPGAP
     # get variable values
@@ -231,16 +233,20 @@ def SolveModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, 
     Cost_dict["f3"] = np.round(f3_cost, 2) # lost sales
     Summary_dict['Demand_met'] = np.sum([Probabilities[instance][s]*(Summary_dict["Purchasing_" + str(s)] + Summary_dict["Production_" + str(s)])/np.sum(demand[instance][s]) for s in range(num_Scenarios)])
     Summary_dict['Demand_outsourced'] = np.sum([Probabilities[instance][s]*Summary_dict["Purchasing_" + str(s)]/np.sum(demand[instance][s]) for s in range(num_Scenarios)])
-    print("obj val: ", Summary_dict['ObjVal'])
-    print("Opening Decisions: ", sum(v_val_x_i.values()), sum(v_val_x_j.values()))
-    print('In house Cost: ', Cost_dict["f1"])
-    print('Outsource Cost: ', Cost_dict["f2"])
-    print('Lost Sales: ', Cost_dict["f3"])
-    print('Demand Penalties: ', Cost_dict["f4"])
+    end_time = time.time()
+
+    Summary_dict['CPU'] = end_time - start_time  
+    #print("obj val: ", Summary_dict['ObjVal'])
+    #print("Opening Decisions: ", sum(v_val_x_i.values()), sum(v_val_x_j.values()))
+    #print('In house Cost: ', Cost_dict["f1"])
+    #print('Outsource Cost: ', Cost_dict["f2"])
+    #print('Lost Sales: ', Cost_dict["f3"])
+    #print('Demand Penalties: ', Cost_dict["f4"])
     #print('Unweighted Demand purchased from outsourcing: ', np.mean([Summary_dict["Purchasing_" + str(s)]/np.sum(demand[instance][s]) for s in range(num_Scenarios)]))
-    print('Demand being met: ', Summary_dict['Demand_met'])
-    print('Weighted Demand purchased from outsourcing: ', Summary_dict['Demand_outsourced'])
-    print('Gap: ', gap)
+    #print('Demand being met: ', Summary_dict['Demand_met'])
+    #print('Weighted Demand purchased from outsourcing: ', Summary_dict['Demand_outsourced'])
+    #print('Gap: ', gap)
+    
     return
 
 # Objective
@@ -487,7 +493,8 @@ def PrintToFileSummaryResults():
     ff = open(results_file, "a")
     ff.write(str(Summary_dict['ObjVal']) + '\t' + str(Cost_dict['f1']) + '\t' + str(Cost_dict['f2']) + '\t' + str(Cost_dict['f3']) + '\t' + str(Cost_dict['f4']) + '\t')
     ff.write(str(Summary_dict['Demand_met']) + '\t' + str(Summary_dict['Demand_outsourced']) + '\t')
-    ff.write(str(Summary_dict['OpenMPs']) + '\t' + str(Summary_dict['OpenDCs']))
+    ff.write(str(Summary_dict['OpenMPs']) + '\t' + str(Summary_dict['OpenDCs']) + '\t')
+    ff.write(str(Summary_dict['CPU']))
     ff.write('\n')
     ff.close()
     return
