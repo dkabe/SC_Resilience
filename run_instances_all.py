@@ -1,4 +1,4 @@
-from stochastic_resilience_v4 import *
+from stochastic_resilience import *
 import time
 instances = 5
 MPs = [2, 3, 4, 6, 6]
