@@ -23,19 +23,15 @@ Outsourced =[2,2,2,2,3]
 levels = 2
 
 Manufacturing_plants = [2, 3, 4, 6, 6]
-Distribution = [3, 4, 6, 8, 3]
+Distribution = [3, 4, 6, 8, 4]
 Market = [1, 2, 3, 5, 29]
 numScenarios = [32, 128, 200, 200, 200]
-
-# volume of product (not instance based)
-volume = np.loadtxt(path + 'Instance_1/Volume_1.txt')
-
-# Cost of purchasing from supplier (not instance based)
-Supplier_cost = np.loadtxt(path + 'Instance_1/SupplierCost_1.txt').reshape((levels, Products, Outsourced))
 
 # Read and append input files
 f_i = [None]*instances
 f_j = [None]*instances
+volume = [None]*instances
+Supplier_cost = [None]*instances 
 Manufacturing_costs = [None]*instances
 Transportation_i_j = [None]*instances
 Transportation_j_k = [None]*instances
@@ -56,24 +52,29 @@ for instance in range(instances):
     Manufacturing_costs[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/Manufacturing_' + str(instance + 1) + '.txt')
 
     # Transportation Costs
-    Transportation_i_j[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/TransMPDC_' + str(instance + 1) + '.txt').reshape((Products, Manufacturing_plants[instance], Distribution[instance]))
-    Transportation_j_k[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/TransDCMZ_' + str(instance + 1) + '.txt').reshape((Products, Distribution[instance], Market[instance]))
+    Transportation_i_j[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/TransMPDC_' + str(instance + 1) + '.txt').reshape((Products[instance], Manufacturing_plants[instance], Distribution[instance]))
+    Transportation_j_k[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/TransDCMZ_' + str(instance + 1) + '.txt').reshape((Products[instance], Distribution[instance], Market[instance]))
 
     # Plant Capacities
     Capacities_i[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/CapacitiesMP_' + str(instance + 1) + '.txt')
     Capacities_j[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/CapacitiesDC_' + str(instance + 1) + '.txt')
     Capacities_l[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/CapacitiesOutsource_' + str(instance + 1) + '.txt')
 
-
     # Cost of shipping from supplier
-    T_O_DC[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/TransSupplierDC_' + str(instance + 1) + '.txt').reshape((Products, Outsourced, Distribution[instance]))
-    T_O_MZ[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/TransSupplierMZ_' + str(instance + 1) + '.txt').reshape((Products, Outsourced, Market[instance]))
+    T_O_DC[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/TransSupplierDC_' + str(instance + 1) + '.txt').reshape((Products[instance], Outsourced[instance], Distribution[instance]))
+    T_O_MZ[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/TransSupplierMZ_' + str(instance + 1) + '.txt').reshape((Products[instance], Outsourced[instance], Market[instance]))
 
     # Unit cost of lost sales
-    lost_sales[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/LostSales_' + str(instance + 1) + '.txt').reshape((Market[instance], Products))
+    lost_sales[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/LostSales_' + str(instance + 1) + '.txt').reshape((Market[instance], Products[instance]))
 
     # demand
-    demand[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/Demand_' + str(instance + 1) + '.txt').reshape((numScenarios[instance], Products, Market[instance]))
+    demand[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/Demand_' + str(instance + 1) + '.txt').reshape((numScenarios[instance], Products[instance], Market[instance]))
+
+    # volume
+    volume[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/Volume_' + str(instance + 1) + '.txt')
+
+    # Supplier cost
+    Supplier_cost[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/SupplierCost_' + str(instance + 1) + '.txt').reshape((levels, Products[instance], Outsourced[instance]))
 
 
 Scenarios = []
@@ -186,10 +187,10 @@ def SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distributi
 
 def SolveModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced):
     grbModel.params.OutputFlag = 0
-    grbModel.params.timelimit = 600
+    grbModel.params.timelimit = 900
     start_time = time.time()
     grbModel.optimize()
-    gap = grbModel.MIPGAP
+    #gap = grbModel.MIPGAP
     # get variable values
     v_val_x_i = grbModel.getAttr('x', x_i)
     v_val_x_j = grbModel.getAttr('x', x_j)
@@ -220,7 +221,7 @@ def SolveModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, 
         Cost_dict["InHouseShipping_" + str(s)] = get_shipping_costs(instance, s,v_val_Y_ijm, v_val_Z_jkm, v_val_T_ljm, v_val_T_lkm, Manufacturing_plants, Distribution, Products, Market, Outsourced)[0]
         Cost_dict["OutsourceShipping_" + str(s)] = get_shipping_costs(instance, s,v_val_Y_ijm, v_val_Z_jkm, v_val_T_ljm, v_val_T_lkm, Manufacturing_plants, Distribution, Products, Market, Outsourced)[1]
         Cost_dict["Production_" + str(s)] = get_production_cost(instance, s,v_val_Q_im, Manufacturing_plants, Products)
-        Cost_dict["Purchasing_" + str(s)] = get_purchase_costs(s,v_val_V1_lm, v_val_V2_lm, Outsourced, Products)
+        Cost_dict["Purchasing_" + str(s)] = get_purchase_costs(instance, s,v_val_V1_lm, v_val_V2_lm, Outsourced, Products)
         Cost_dict["LostSales_" + str(s)] = get_lost_cost(instance, s,v_val_U_km, Market, Products)    
 
     f1_cost = 0
@@ -244,7 +245,7 @@ def SolveModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, 
     #print('Outsource Cost: ', Cost_dict["f2"])
     #print('Lost Sales: ', Cost_dict["f3"])
     #print('Demand Penalties: ', Cost_dict["f4"])
-    #print('Unweighted Demand purchased from outsourcing: ', np.mean([Summary_dict["Purchasing_" + str(s)]/np.sum(demand[instance][s]) for s in range(num_Scenarios)]))
+    print('Unweighted Demand purchased from outsourcing: ', np.mean([Summary_dict["Purchasing_" + str(s)]/np.sum(demand[instance][s]) for s in range(num_Scenarios)]))
     #print('Demand being met: ', Summary_dict['Demand_met'])
     #print('Weighted Demand purchased from outsourcing: ', Summary_dict['Demand_outsourced'])
     #print('Gap: ', gap)
@@ -310,7 +311,7 @@ def SetGrb_Obj(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, 
         b_cost = 0
         for l in range(Outsourced):
             for m in range(Products):
-                b_cost += Supplier_cost[0][m][l]*V1_lm[s,m,l] + Supplier_cost[1][m][l]*V2_lm[s,m,l]
+                b_cost += Supplier_cost[instance][0][m][l]*V1_lm[s,m,l] + Supplier_cost[instance][1][m][l]*V2_lm[s,m,l]
 
         total_b_cost += Probabilities[instance][s]*b_cost
 
@@ -360,11 +361,11 @@ def ModelCons(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, M
                         for m in range(Products) for l in range(Outsourced))
 
     # Capacity Constraints
-    grbModel.addConstrs(quicksum(volume[m]*Q_im[s,m,i] for m in range(Products)) <= Scenarios[instance][s][0][i]*Capacities_i[instance][i]*x_i[i]
+    grbModel.addConstrs(quicksum(volume[instance][m]*Q_im[s,m,i] for m in range(Products)) <= Scenarios[instance][s][0][i]*Capacities_i[instance][i]*x_i[i]
                         for s in range(num_Scenarios) for i in range(Manufacturing_plants))
 
-    grbModel.addConstrs(quicksum(volume[m]*Y_ijm[s,m,i,j] for i in range(Manufacturing_plants) for m in range(Products)) +
-                        quicksum(volume[m]*T_ljm[s,m,l,j] for l in range(Outsourced) for m in range(Products)) <=
+    grbModel.addConstrs(quicksum(volume[instance][m]*Y_ijm[s,m,i,j] for i in range(Manufacturing_plants) for m in range(Products)) +
+                        quicksum(volume[instance][m]*T_ljm[s,m,l,j] for l in range(Outsourced) for m in range(Products)) <=
                         Scenarios[instance][s][1][j]*Capacities_j[instance][j]*x_j[j] for s in range(num_Scenarios) for s in range(num_Scenarios)
                         for j in range(Distribution))
 
@@ -372,7 +373,7 @@ def ModelCons(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, M
                         for l in range(Outsourced) for m in range(Products))
 
 
-    # Indicator variable constraints for step function (25 is arbitrary)
+    # Indicator variable constraints for step function 
     grbModel.addConstrs(V1_lm[s,m,l] <= epsilon for s in range(num_Scenarios) for m in range(Products) for l in range(Outsourced))
 
 
@@ -438,13 +439,13 @@ def get_production_cost(instance, scen, Q, Manufacturing_plants, Products):
 
     return(np.round(pr_cost))
 
-def get_purchase_costs(scen, V1, V2, Outsourced, Products):
+def get_purchase_costs(instance, scen, V1, V2, Outsourced, Products):
 
     # Buying from outsource cost
     b_cost = 0
     for l in range(Outsourced):
         for m in range(Products):
-            b_cost += Supplier_cost[0][m][l]*V1[scen,m,l] + Supplier_cost[1][m][l]*V2[scen,m,l]
+            b_cost += Supplier_cost[instance][0][m][l]*V1[scen,m,l] + Supplier_cost[instance][1][m][l]*V2[scen,m,l]
 
     return(np.round(b_cost))
 
@@ -465,7 +466,7 @@ def get_outsourced_cost(instance, scen, V1, V2, T1, T2, Distribution, Products, 
     ship_to_market = 0
     for l in range(Outsourced):
         for m in range(Products):
-            b_cost += Supplier_cost[0][m][l]*V1[scen,m,l] + Supplier_cost[1][m][l]*V2[scen,m,l]
+            b_cost += Supplier_cost[instance][0][m][l]*V1[scen,m,l] + Supplier_cost[instance][1][m][l]*V2[scen,m,l]
 
     # Shipping from outsourced cost
     for l in range(Outsourced):
