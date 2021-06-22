@@ -249,6 +249,7 @@ def SolveModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, 
     #print('Demand being met: ', Summary_dict['Demand_met'])
     #print('Weighted Demand purchased from outsourcing: ', Summary_dict['Demand_outsourced'])
     #print('Gap: ', gap)
+
     
     return
 

@@ -81,7 +81,6 @@ for i in range(instances):
     Scenarios.append(Scen)
     Probabilities.append(p_scen)
 
-#np.savetxt("scen.txt", Scenarios[1], fmt='%s')
 
 # Initialize model variables
 
@@ -169,7 +168,7 @@ def SolveModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, 
         Summary_dict["LostSales_" + str(s)] = sum([v_val_U_km[(s,k,m)] for m in range(Products) for k in range(Market)])
 
     for s in range(num_Scenarios):
-        Cost_dict["InHouseShipping_" + str(s)] = get_shipping_costs(instance, s,v_val_Y_ijm, v_val_Z_jkm, Manufacturing_plants, Distribution, Products, Market)
+        Cost_dict["InHouseShipping_" + str(s)] = get_shipping_costs(instance, s, v_val_Y_ijm, v_val_Z_jkm, Manufacturing_plants, Distribution, Products, Market)
         Cost_dict["Production_" + str(s)] = get_production_cost(instance, s,v_val_Q_im, Manufacturing_plants, Products)
         Cost_dict["LostSales_" + str(s)] = get_lost_cost(instance, s,v_val_U_km, Market, Products)    
 
