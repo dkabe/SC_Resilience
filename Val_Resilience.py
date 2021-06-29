@@ -14,14 +14,14 @@ import itertools
 path = "/home/dkabe/Model_brainstorming/Input_Data/"
 p_failure = 0.1
 p_running = 1 - p_failure
-instances = 5
+instances = 6
 num_samples = 200
-Products  = [2,2,2,2,3]
+Products  = [2,2,2,2,3,3]
 
-Manufacturing_plants = [2, 3, 4, 6, 6]
-Distribution = [3, 4, 6, 8, 4]
-Market = [1, 2, 3, 5, 29]
-numScenarios = [32, 128, 200, 200, 200]
+Manufacturing_plants = [2, 3, 4, 6, 6, 6]
+Distribution = [3, 4, 6, 8, 4, 4]
+Market = [1, 2, 3, 5, 29, 29]
+numScenarios = [32, 128, 200, 200, 200, 200]
 
 # Read and append input files
 f_i = [None]*instances
