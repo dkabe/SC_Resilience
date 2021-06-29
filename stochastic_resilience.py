@@ -14,18 +14,18 @@ import itertools
 path = "/home/dkabe/Model_brainstorming/Input_Data/"
 p_failure = 0.1
 p_running = 1 - p_failure
-instances = 5
+instances = 6
 num_samples = 200
-Products  = [2,2,2,2,3]
-Outsourced =[2,2,2,2,3]
+Products  = [2,2,2,2,3,3]
+Outsourced =[2,2,2,2,3,3]
 #Products = 2
 #Outsourced = 2
 levels = 2
 
-Manufacturing_plants = [2, 3, 4, 6, 6]
-Distribution = [3, 4, 6, 8, 4]
-Market = [1, 2, 3, 5, 29]
-numScenarios = [32, 128, 200, 200, 200]
+Manufacturing_plants = [2, 3, 4, 6, 6, 6]
+Distribution = [3, 4, 6, 8, 4, 4]
+Market = [1, 2, 3, 5, 29, 29]
+numScenarios = [32, 128, 200, 200, 200, 200]
 
 # Read and append input files
 f_i = [None]*instances
@@ -42,6 +42,7 @@ T_O_DC = [None]*instances
 T_O_MZ = [None]*instances
 lost_sales = [None]*instances
 demand = [None]*instances
+compatibility = [None]*instances
 
 for instance in range(instances):
     # Cost of Opening
@@ -76,6 +77,9 @@ for instance in range(instances):
     # Supplier cost
     Supplier_cost[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/SupplierCost_' + str(instance + 1) + '.txt').reshape((levels, Products[instance], Outsourced[instance]))
 
+    # Compatibility of plants to products
+    compatibility[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/Compatibilities_' + str(instance + 1) + '.txt')
+
 
 Scenarios = []
 Probabilities = []
@@ -106,7 +110,7 @@ x_j = {} # opening DC
 U_km = {} # quantity lost sales
 V1_lm = {} # quantity products purchased from outsourcing below epsilon threshold
 V2_lm = {} # quantity products purchased from outsourcing in excess of epsilon threshold
-Q_im = {} # quantity produced
+Q_im = {} # quantity of product m produced at plant i
 Y_ijm = {} # shipping i -> j
 Z_jkm = {} # shipping j -> k
 T_ljm = {} # shipping l -> j
@@ -245,7 +249,7 @@ def SolveModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, 
     #print('Outsource Cost: ', Cost_dict["f2"])
     #print('Lost Sales: ', Cost_dict["f3"])
     #print('Demand Penalties: ', Cost_dict["f4"])
-    print('Unweighted Demand purchased from outsourcing: ', np.mean([Summary_dict["Purchasing_" + str(s)]/np.sum(demand[instance][s]) for s in range(num_Scenarios)]))
+    #print('Unweighted Demand purchased from outsourcing: ', np.mean([Summary_dict["Purchasing_" + str(s)]/np.sum(demand[instance][s]) for s in range(num_Scenarios)]))
     #print('Demand being met: ', Summary_dict['Demand_met'])
     #print('Weighted Demand purchased from outsourcing: ', Summary_dict['Demand_outsourced'])
     #print('Gap: ', gap)
@@ -372,6 +376,10 @@ def ModelCons(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, M
 
     grbModel.addConstrs((V1_lm[s,m,l] + V2_lm[s,m,l] <= (Capacities_l[instance][m][l])) for s in range(num_Scenarios)
                         for l in range(Outsourced) for m in range(Products))
+    
+    # Compatibility Constraints
+    #grbModel.addConstrs(Q_im[s,m,i]  <= Scenarios[instance][s][0][i]*Capacities_i[instance][i]*x_i[i]*compatibility[instance][m][i]
+     #                   for m in range(Products) for s in range(num_Scenarios) for i in range(Manufacturing_plants))
 
 
     # Indicator variable constraints for step function 
