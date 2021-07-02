@@ -1,3 +1,4 @@
 {
-    "python.pythonPath": "/home/dkabe/env_gurobi/bin/python3.7"
+    "python.pythonPath": "/home/dkabe/env_gurobi/bin/python3.7",
+    "jupyter.jupyterServerType": "local"
 }
