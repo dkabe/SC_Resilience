@@ -26,7 +26,7 @@ levels = 2
 Manufacturing_plants = [2, 3, 4, 6, 6, 6]
 Distribution = [3, 4, 6, 8, 4, 4]
 Market = [1, 2, 3, 5, 29, 29]
-numScenarios = [32, 128, 200, 200, 200, 200]
+numScenarios = [32, 128, 200, 200, 128, 200]
 
 # Read and append input files
 f_i = [None]*instances
@@ -85,25 +85,14 @@ for instance in range(instances):
 Scenarios = []
 Probabilities = []
 
-for i in range(instances):
-    a_si = list(itertools.product([1, 0], repeat = Manufacturing_plants[i]))
-    b_sj = list(itertools.product([1, 0], repeat = Distribution[i]))
-    Scen = [[x,y] for x in a_si for y in b_sj]
-    p_scen = []
-    for s in range(len(Scen)):
-        p_i = (p_running**(np.sum(Scen[s][0]) + np.sum(Scen[s][1])))*(p_failure**(Manufacturing_plants[i] + Distribution[i] - (np.sum(Scen[s][0]) + np.sum(Scen[s][1]))))
-        p_scen.append(p_i)
-    if len(Scen) > num_samples:
-        random.seed(0)
-        indices = random.sample(range(len(Scen)), num_samples)
-        Scen = [Scen[index] for index in indices]
-        p_scen = [p_scen[index] for index in indices]
-        p_factor = 1/np.sum(p_scen)
-        p_scen = list(map(lambda x: x*p_factor, p_scen))
+for instance in range(instances):
+    text_file = open(path + 'Instance_' + str(instance + 1) + '/scen_' + str(instance + 1) + '.txt', "r")
+    ls = text_file.read().split('\n')[:-1]
+    Scen = list(map(lambda x: ast.literal_eval(x), ls))
+    p_scen = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/p_scen_' + str(instance + 1) + '.txt')
     Scenarios.append(Scen)
     Probabilities.append(p_scen)
 
-#np.savetxt("scen.txt", Scenarios[1], fmt='%s')
 # Initialize model variables
 
 x_i = {} # opening manufacturing plant
@@ -117,6 +106,19 @@ Z_jkm = {} # shipping j -> k
 T_ljm = {} # shipping l -> j
 T_lkm = {} # shipping l -> k
 w_s = {} # penalty for not meeting demand above specified rate
+
+# variable values
+v_val_x_i = {}
+v_val_x_j = {}
+v_val_U_km = {}
+v_val_V1_lm = {}
+v_val_V2_lm = {}
+v_val_Q_im = {}
+v_val_Y_ijm = {}
+v_val_Z_jkm = {}
+v_val_T_ljm = {}
+v_val_T_lkm = {}
+v_val_w = {}
 
 # Dictionaries for analysis
 Cost_dict = {}
@@ -197,6 +199,19 @@ def SolveModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, 
     grbModel.optimize()
     #gap = grbModel.MIPGAP
     # get variable values
+
+    global v_val_x_i 
+    global v_val_x_j 
+    global v_val_U_km 
+    global v_val_V1_lm 
+    global v_val_V2_lm 
+    global v_val_Q_im 
+    global v_val_Y_ijm 
+    global v_val_Z_jkm 
+    global v_val_T_ljm 
+    global v_val_T_lkm 
+    global v_val_w 
+
     v_val_x_i = grbModel.getAttr('x', x_i)
     v_val_x_j = grbModel.getAttr('x', x_j)
     v_val_U_km = grbModel.getAttr('x', U_km)
@@ -501,6 +516,18 @@ def get_rl_rate(w, instance, num_Scenarios, Market, Products):
 
     return(rl_penalty)
 
+def save_v_values(instance, rl, save_results):
+    v_values = [v_val_x_i, v_val_x_j, v_val_U_km, v_val_V1_lm, v_val_V2_lm, v_val_Q_im, v_val_Y_ijm, v_val_Z_jkm, v_val_T_ljm, v_val_T_lkm, v_val_w]
+    if save_results:
+        ff = open("/home/dkabe/Model_brainstorming/Output/Variable_vals/" + "Instance_" + str(instance + 1) +  "variable_vals_" + str(rl) + "txt", "w+")
+        for i in range(len(values)):
+            if i != len(values) - 1:
+                ff.write(values[i] + " = " + str(v_values[i]) + '\n')
+            else:
+                ff.write(values[i] + " = " + str(v_values[i]))
+            ff.close()
+    return
+
 def PrintToFileSummaryResults():
     results_file = "/home/dkabe/Model_brainstorming/Output/results.txt"
     ff = open(results_file, "a")
@@ -513,10 +540,11 @@ def PrintToFileSummaryResults():
     return
 
 
-def run_Model(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, objDict):
+def run_Model(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, objDict, save_results):
     for key, value in objDict.items():
         objWeights[key] = value
 
     SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon)
     SolveModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced)
     PrintToFileSummaryResults()
+    save_v_values(instance, rl, save_results)
