@@ -519,7 +519,7 @@ def get_rl_rate(w, instance, num_Scenarios, Market, Products):
 def save_v_values(instance, rl, save_results):
     v_values = [v_val_x_i, v_val_x_j, v_val_U_km, v_val_V1_lm, v_val_V2_lm, v_val_Q_im, v_val_Y_ijm, v_val_Z_jkm, v_val_T_ljm, v_val_T_lkm, v_val_w]
     if save_results:
-        ff = open("/home/dkabe/Model_brainstorming/Output/Variable_vals/" + "Instance_" + str(instance + 1) +  "variable_vals_" + str(rl) + "txt", "w+")
+        ff = open("/home/dkabe/Model_brainstorming/Output/Variable_vals/" + "Instance_" + str(instance + 1) +  "variable_vals_" + str(rl) + ".txt", "w+")
         for i in range(len(values)):
             if i != len(values) - 1:
                 ff.write(values[i] + " = " + str(v_values[i]) + '\n')
@@ -546,5 +546,5 @@ def run_Model(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, M
 
     SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon)
     SolveModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced)
-    PrintToFileSummaryResults()
+    #PrintToFileSummaryResults()
     save_v_values(instance, rl, save_results)
