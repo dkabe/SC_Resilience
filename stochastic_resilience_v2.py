@@ -3,9 +3,8 @@ import math
 import time
 import numpy as np
 import random
-from random import randint
+from random import randint, seed
 import pandas as pd
-from random import seed
 import matplotlib.pyplot as plt
 import itertools
 import ast 
