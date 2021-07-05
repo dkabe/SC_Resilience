@@ -1,9 +1,9 @@
+from gurobipy import *
 import math
 import time
 import numpy as np
 import random
 from random import randint
-from gurobipy import *
 import pandas as pd
 from random import seed
 import matplotlib.pyplot as plt
