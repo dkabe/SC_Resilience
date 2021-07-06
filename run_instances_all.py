@@ -1,6 +1,6 @@
 from stochastic_resilience_v2 import *
 import time
-instances = 5
+instances = 6
 MPs = [2, 3, 4, 6, 6, 6]
 DCs = [3, 4, 6, 8, 4, 4]
 MZs = [1, 2, 3, 5, 29, 29]

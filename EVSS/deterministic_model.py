@@ -5,6 +5,7 @@ from gurobipy import *
 import pandas as pd
 from random import seed
 import time
+import ast
 
 # Read input files
 #path = "C:/Users/Devika Kabe/Documents/Model_brainstorming/Input_Data/"
@@ -131,7 +132,7 @@ first_stage_decisions = {}
 
 grbModel_det = Model('deterministic')
 
-def SetGurobiModel_det(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon):
+def SetGurobiModel_det(instance, rl, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, s1):
 
     for i in range(Manufacturing_plants):
         x_i[i] = grbModel_det.addVar(vtype = GRB.BINARY)
@@ -175,25 +176,26 @@ def SetGurobiModel_det(instance, rl, num_Scenarios, Manufacturing_plants, Distri
             for k in range(Market):
                     T_lkm[m,l,k] = grbModel_det.addVar(vtype = GRB.CONTINUOUS)
 
-    for m in range(Products):
-        for l in range(Outsourced):
-            y_lm[m,l] = grbModel_det.addVar(vtype = GRB.BINARY)
+    for k in range(Market):
+        for m in range(Products):
+            w_s[k,m] = grbModel_det.addVar(vtype = GRB.CONTINUOUS)
 
-    SetGrb_Obj_det()
-    ModelCons_det(s1)
+    SetGrb_Obj_det(instance, rl, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, s1)
+    ModelCons_det(instance, rl, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, s1)
 
-def SolveModel_det(s1):
+def SolveModel_det():
     grbModel_det.params.OutputFlag = 0
     grbModel_det.optimize()
+    global v_val_x_i
+    global v_val_x_j
     v_val_x_i = grbModel_det.getAttr('x', x_i)
     v_val_x_j = grbModel_det.getAttr('x', x_j)
-    first_stage_decisions[str(s1) + "_" + "x_i"] = v_val_x_i
-    first_stage_decisions[str(s1) + "_" + "x_j"] = v_val_x_j
+    
     return
 
 # Objective
 
-def SetGrb_Obj_det():
+def SetGrb_Obj_det(instance, rl, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, s1):
 
     grb_expr = LinExpr()
 
@@ -201,9 +203,9 @@ def SetGrb_Obj_det():
     OC_1 = 0
     OC_2 = 0
     for i in range(Manufacturing_plants):
-        OC_1 += f_i[i]*x_i[i]
+        OC_1 += f_i[instance][i]*x_i[i]
     for j in range(Distribution):
-        OC_2 += f_j[j]*x_j[j]
+        OC_2 += f_j[instance][j]*x_j[j]
 
     total_shipment = 0
     total_pr_cost = 0
@@ -216,25 +218,26 @@ def SetGrb_Obj_det():
     ship_2 = 0
     ship_3 = 0
     ship_4 = 0
+
     for i in range(Manufacturing_plants):
         for j in range(Distribution):
             for m in range(Products):
-                ship_1 += Transportation_i_j[m][i][j]*Y_ijm[m,i,j]
+                ship_1 += Transportation_i_j[instance][m][i][j]*Y_ijm[m,i,j]
 
     for j in range(Distribution):
         for k in range(Market):
             for m in range(Products):
-                ship_2 += Transportation_j_k[m][j][k]*Z_jkm[m,j,k]
+                ship_2 += Transportation_j_k[instance][m][j][k]*Z_jkm[m,j,k]
 
     for l in range(Outsourced):
         for j in range(Distribution):
             for m in range(Products):
-                ship_3 += T_O_DC[m][l][j]*T_ljm[m,l,j]
+                ship_3 += T_O_DC[instance][m][l][j]*T_ljm[m,l,j]
 
     for l in range(Outsourced):
         for k in range(Market):
             for m in range(Products):
-                ship_4 += T_O_MZ[m][l][k]*T_lkm[m,l,k]
+                ship_4 += T_O_MZ[instance][m][l][k]*T_lkm[m,l,k]
 
     total_shipment += ship_1 + ship_2 + ship_3 + ship_4
 
@@ -242,7 +245,7 @@ def SetGrb_Obj_det():
     pr_cost = 0
     for i in range(Manufacturing_plants):
         for m in range(Products):
-            pr_cost += Manufacturing_costs[i][m]*Q_im[m,i]
+            pr_cost += Manufacturing_costs[instance][i][m]*Q_im[m,i]
 
     total_pr_cost += pr_cost
 
@@ -250,14 +253,15 @@ def SetGrb_Obj_det():
     b_cost = 0
     for l in range(Outsourced):
         for m in range(Products):
-            b_cost += Supplier_cost[0][m][l]*V1_lm[m,l] + Supplier_cost[1][m][l]*V2_lm[m,l]
+            b_cost += Supplier_cost[instance][0][m][l]*V1_lm[m,l] + Supplier_cost[instance][1][m][l]*V2_lm[m,l]
+
     total_b_cost += b_cost
 
     #Lost Sales
     l_cost = 0
     for k in range(Market):
         for m in range(Products):
-            l_cost += lost_sales[k][m]*U_km[k,m]
+            l_cost += lost_sales[instance][k][m]*U_km[k,m]
 
     total_l_cost += l_cost
 
@@ -267,7 +271,7 @@ def SetGrb_Obj_det():
 
     return
 
-def ModelCons_det(s1):
+def ModelCons_det(instance, rl, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, s1):
 
     # Network Flow
 
@@ -279,7 +283,7 @@ def ModelCons_det(s1):
                         for j in range(Distribution) for m in range(Products))
 
     grbModel_det.addConstrs((quicksum(Z_jkm[m,j,k] for j in range(Distribution)) +
-                         quicksum(T_lkm[m,l,k] for l in range(Outsourced)) + U_km[k,m]) >= demand[s1][m][k]
+                         quicksum(T_lkm[m,l,k] for l in range(Outsourced)) + U_km[k,m]) >= demand[instance][s1][m][k]
                          for k in range(Market) for m in range(Products))
 
 
@@ -289,24 +293,42 @@ def ModelCons_det(s1):
                         for m in range(Products) for l in range(Outsourced))
 
     # Capacity Constraints
-    grbModel_det.addConstrs(quicksum(volume[m]*Q_im[m,i] for m in range(Products)) <= Scenarios[s1][0][i]*Capacities_i[i]*x_i[i]
+    grbModel_det.addConstrs(quicksum(volume[instance][m]*Q_im[m,i] for m in range(Products)) <= Scenarios[instance][s1][0][i]*Capacities_i[instance][i]*x_i[i]
                          for i in range(Manufacturing_plants))
 
-    grbModel_det.addConstrs(quicksum(volume[m]*Y_ijm[m,i,j] for i in range(Manufacturing_plants) for m in range(Products)) +
-                        quicksum(volume[m]*T_ljm[m,l,j] for l in range(Outsourced) for m in range(Products)) <=
-                        Scenarios[s1][1][j]*Capacities_j[j]*x_j[j]
+    grbModel_det.addConstrs(quicksum(volume[instance][m]*Y_ijm[m,i,j] for i in range(Manufacturing_plants) for m in range(Products)) +
+                        quicksum(volume[instance][m]*T_ljm[m,l,j] for l in range(Outsourced) for m in range(Products)) <=
+                        Scenarios[instance][s1][1][j]*Capacities_j[instance][j]*x_j[j]
                         for j in range(Distribution))
 
-    grbModel_det.addConstrs((V1_lm[m,l] + V2_lm[m,l] <= (Capacities_l[m][l]))
+    grbModel_det.addConstrs((V1_lm[m,l] + V2_lm[m,l] <= (Capacities_l[instance][m][l]))
                         for l in range(Outsourced) for m in range(Products))
 
 
-    # Indicator variable constraints for step function (25 is arbitrary)
+    # Indicator variable constraints for step function 
     grbModel_det.addConstrs(V1_lm[m,l] <= epsilon
                                for m in range(Products) for l in range(Outsourced))
+
+    
+    # Resilience Metric 
+    grbModel_det.addConstrs(w_s[k,m] >= rl - (1 - U_km[k,m]/demand[instance][s1][m][k]) for k in range(Market) for m in range(Products))
+
     return
 
-def run_Model_det(s1):
+def save_FirstStageDecisions(instance, s1, rl):
+    values = ["v_val_x_i", "v_val_x_j"]
+    v_values = [v_val_x_i, v_val_x_j]
+    ff = open("/home/dkabe/Model_brainstorming/EVSS/First_Stage_Decisions/" + "Instance_" + str(instance + 1) +  "/first_stage_" + str(s1) + "_" + str(rl) + ".txt", "w+")
+    for i in range(len(v_values)):
+        if i != len(v_values) - 1:
+            ff.write(values[i] + " = " + str(v_values[i]) + '\n')
+        else:
+            ff.write(values[i] + " = " + str(v_values[i]))
+    ff.close()
+    return
 
-    SetGurobiModel_det(s1)
-    SolveModel_det(s1) 
+def run_Model_det(instance, rl, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, s1):
+
+    SetGurobiModel_det(instance, rl, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, s1)
+    SolveModel_det()
+    save_FirstStageDecisions(instance, s1, rl) 
