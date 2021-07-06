@@ -6,84 +6,132 @@ import pandas as pd
 from random import seed
 import time
 
-np.random.seed(0)
-
-Manufacturing_plants = 2
-Distribution = 3
-Market = 4
-Products = 2
-Outsourced = 2
-epsilon = 25
-
-# Scenario parameters
-a_si = [[1,1], [1,0], [0,1]] # don't include [0,0]
-b_sj = [[1,1,1], [1,0,1], [1,1,0], [1,0,0], [0,1,1], [0,1,0], [0,0,1]] # don't include [0,0,0]
-Scenarios = [[x,y] for x in a_si for y in b_sj]
-
-num_Scenarios = len(Scenarios)
-p_scen = 1/num_Scenarios
-# Product Demand
-demand = np.random.randint(0,50,(num_Scenarios, Products,Market))
-
-# Cost of opening
-f_i = [200, 50]
-f_j = [75, 100, 50]
-
-# Unit cost of manufacturing product
-Manufacturing_costs = np.random.uniform(0,2, (Manufacturing_plants,Products))
-
-# Unit cost of transporting m from plant to DC
-Transportation_i_j = np.random.uniform(0,2, (Products, Manufacturing_plants, Distribution))
-
-# Unit cost of transporting m from DC to Market Zone
-Transportation_j_k = np.random.uniform(0,2, (Products, Distribution, Market))
-
-# Plant Capacities: Bigger capacities for the more expensive ones
-Capacities_i = np.zeros(Manufacturing_plants) # in volume (metres cubed)
-Capacities_i[0] = np.random.randint(800,1000)
-Capacities_i[1] = np.random.randint(200,400)
-Capacities_j = np.zeros(Distribution) # in volume (metres cubed)
-Capacities_j[0] = np.random.randint(400, 600)
-Capacities_j[1] = np.random.randint(600, 800)
-Capacities_j[2] = np.random.randint(200,400)
-Capacities_l = np.random.randint(50,100, (Products,Outsourced)) # in terms of products
-
-# Cost of purchasing product m from supplier l (assume only 1 product type from each outsourcer)
+# Read input files
+#path = "C:/Users/Devika Kabe/Documents/Model_brainstorming/Input_Data/"
+path = "/home/dkabe/Model_brainstorming/Input_Data/"
+p_failure = 0.1
+p_running = 1 - p_failure
+instances = 6
+num_samples = 200
+Products  = [2,2,2,2,3,3]
+Outsourced =[2,2,2,2,3,3]
+#Products = 2
+#Outsourced = 2
 levels = 2
-Supplier_cost = np.zeros((levels, Products, Outsourced))
-Supplier_cost[0] = np.random.uniform(10,15, (Products, Outsourced))
-Supplier_cost[1] = np.random.randint(15,20, (Products, Outsourced))
 
-# Cost of transporting product m from outsourced facility l to j
-T_O_DC = np.random.uniform(2, 5, (Products, Outsourced, Distribution))
+Manufacturing_plants = [2, 3, 4, 6, 6, 6]
+Distribution = [3, 4, 6, 8, 4, 4]
+Market = [1, 2, 3, 5, 29, 29]
+numScenarios = [32, 128, 200, 200, 128, 200]
 
-# Cost of shipping product m from outsourced facility l to k
-T_O_MZ = np.random.uniform(5, 7,(Products, Outsourced, Market))
+# Read and append input files
+f_i = [None]*instances
+f_j = [None]*instances
+volume = [None]*instances
+Supplier_cost = [None]*instances 
+Manufacturing_costs = [None]*instances
+Transportation_i_j = [None]*instances
+Transportation_j_k = [None]*instances
+Capacities_i = [None]*instances
+Capacities_j = [None]*instances
+Capacities_l = [None]*instances
+T_O_DC = [None]*instances
+T_O_MZ = [None]*instances
+lost_sales = [None]*instances
+demand = [None]*instances
+compatibility = [None]*instances
 
-# Product volume
-volume = np.random.uniform(2,3,(Products))
+for instance in range(instances):
+    # Cost of Opening
+    f_i[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/OpenMP_' + str(instance + 1) + '.txt')
+    f_j[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/OpenDC_' + str(instance + 1) + '.txt')
 
-# unit cost of lost sales
-lost_sales = np.random.randint(18,25,(Market,Products))
+    # Unit cost of Manufacturing
+    Manufacturing_costs[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/Manufacturing_' + str(instance + 1) + '.txt')
+
+    # Transportation Costs
+    Transportation_i_j[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/TransMPDC_' + str(instance + 1) + '.txt').reshape((Products[instance], Manufacturing_plants[instance], Distribution[instance]))
+    Transportation_j_k[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/TransDCMZ_' + str(instance + 1) + '.txt').reshape((Products[instance], Distribution[instance], Market[instance]))
+
+    # Plant Capacities
+    Capacities_i[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/CapacitiesMP_' + str(instance + 1) + '.txt')
+    Capacities_j[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/CapacitiesDC_' + str(instance + 1) + '.txt')
+    Capacities_l[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/CapacitiesOutsource_' + str(instance + 1) + '.txt')
+
+    # Cost of shipping from supplier
+    T_O_DC[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/TransSupplierDC_' + str(instance + 1) + '.txt').reshape((Products[instance], Outsourced[instance], Distribution[instance]))
+    T_O_MZ[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/TransSupplierMZ_' + str(instance + 1) + '.txt').reshape((Products[instance], Outsourced[instance], Market[instance]))
+
+    # Unit cost of lost sales
+    lost_sales[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/LostSales_' + str(instance + 1) + '.txt').reshape((Market[instance], Products[instance]))
+
+    # demand
+    demand[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/Demand_' + str(instance + 1) + '.txt').reshape((numScenarios[instance], Products[instance], Market[instance]))
+
+    # volume
+    volume[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/Volume_' + str(instance + 1) + '.txt')
+
+    # Supplier cost
+    Supplier_cost[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/SupplierCost_' + str(instance + 1) + '.txt').reshape((levels, Products[instance], Outsourced[instance]))
+
+    # Compatibility of plants to products
+    compatibility[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/Compatibilities_' + str(instance + 1) + '.txt')
+
+
+Scenarios = []
+Probabilities = []
+
+for instance in range(instances):
+    text_file = open(path + 'Instance_' + str(instance + 1) + '/scen_' + str(instance + 1) + '.txt', "r")
+    ls = text_file.read().split('\n')[:-1]
+    Scen = list(map(lambda x: ast.literal_eval(x), ls))
+    p_scen = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/p_scen_' + str(instance + 1) + '.txt')
+    Scenarios.append(Scen)
+    Probabilities.append(p_scen)
 
 # Initialize model variables
+
 x_i = {} # opening manufacturing plant
 x_j = {} # opening DC
 U_km = {} # quantity lost sales
-V1_lm = {} # quantity of products purchased from outsourcing (epsilon)
-V2_lm = {} # quantity of products purchased from outsourcing (past epsilon)
-Q_im = {} # quantity produced
+V1_lm = {} # quantity products purchased from outsourcing below epsilon threshold
+V2_lm = {} # quantity products purchased from outsourcing in excess of epsilon threshold
+Q_im = {} # quantity of product m produced at plant i
 Y_ijm = {} # shipping i -> j
 Z_jkm = {} # shipping j -> k
 T_ljm = {} # shipping l -> j
 T_lkm = {} # shipping l -> k
-y_lm = {} # indicator variable for step function
+w_s = {} # penalty for not meeting demand above specified rate
+
+# variable values
+v_val_x_i = {}
+v_val_x_j = {}
+v_val_U_km = {}
+v_val_V1_lm = {}
+v_val_V2_lm = {}
+v_val_Q_im = {}
+v_val_Y_ijm = {}
+v_val_Z_jkm = {}
+v_val_T_ljm = {}
+v_val_T_lkm = {}
+v_val_w = {}
+
+# Dictionaries for analysis
+Cost_dict = {}
+Summary_dict = {}
+
+# Dictionary to weigh different objectives
+objWeights = {}
+
+# Dictionary to save values of each objectives
+dic_grbOut = {}
+
 
 first_stage_decisions = {}
 
 grbModel_det = Model('deterministic')
 
-def SetGurobiModel_det(s1):
+def SetGurobiModel_det(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon):
 
     for i in range(Manufacturing_plants):
         x_i[i] = grbModel_det.addVar(vtype = GRB.BINARY)
