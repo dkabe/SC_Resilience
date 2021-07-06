@@ -8,6 +8,7 @@ import pandas as pd
 from random import seed
 import matplotlib.pyplot as plt
 import itertools
+import ast
 
 # Read input files
 #path = "C:/Users/Devika Kabe/Documents/Model_brainstorming/Input_Data/"
@@ -21,7 +22,7 @@ Products  = [2,2,2,2,3,3]
 Manufacturing_plants = [2, 3, 4, 6, 6, 6]
 Distribution = [3, 4, 6, 8, 4, 4]
 Market = [1, 2, 3, 5, 29, 29]
-numScenarios = [32, 128, 200, 200, 200, 200]
+numScenarios = [32, 128, 200, 200, 128, 200]
 
 # Read and append input files
 f_i = [None]*instances
@@ -63,21 +64,11 @@ for instance in range(instances):
 Scenarios = []
 Probabilities = []
 
-for i in range(instances):
-    a_si = list(itertools.product([1, 0], repeat = Manufacturing_plants[i]))
-    b_sj = list(itertools.product([1, 0], repeat = Distribution[i]))
-    Scen = [[x,y] for x in a_si for y in b_sj]
-    p_scen = []
-    for s in range(len(Scen)):
-        p_i = (p_running**(np.sum(Scen[s][0]) + np.sum(Scen[s][1])))*(p_failure**(Manufacturing_plants[i] + Distribution[i] - (np.sum(Scen[s][0]) + np.sum(Scen[s][1]))))
-        p_scen.append(p_i)
-    if len(Scen) > num_samples:
-        random.seed(0)
-        indices = random.sample(range(len(Scen)), num_samples)
-        Scen = [Scen[index] for index in indices]
-        p_scen = [p_scen[index] for index in indices]
-        p_factor = 1/np.sum(p_scen)
-        p_scen = list(map(lambda x: x*p_factor, p_scen))
+for instance in range(instances):
+    text_file = open(path + 'Instance_' + str(instance + 1) + '/scen_' + str(instance + 1) + '.txt', "r")
+    ls = text_file.read().split('\n')[:-1]
+    Scen = list(map(lambda x: ast.literal_eval(x), ls))
+    p_scen = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/p_scen_' + str(instance + 1) + '.txt')
     Scenarios.append(Scen)
     Probabilities.append(p_scen)
 
