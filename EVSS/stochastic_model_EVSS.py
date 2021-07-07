@@ -40,7 +40,6 @@ T_O_DC = [None]*instances
 T_O_MZ = [None]*instances
 lost_sales = [None]*instances
 demand = [None]*instances
-compatibility = [None]*instances
 
 for instance in range(instances):
     # Cost of Opening
@@ -75,10 +74,6 @@ for instance in range(instances):
     # Supplier cost
     Supplier_cost[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/SupplierCost_' + str(instance + 1) + '.txt').reshape((levels, Products[instance], Outsourced[instance]))
 
-    # Compatibility of plants to products
-    compatibility[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/Compatibilities_' + str(instance + 1) + '.txt')
-
-
 Scenarios = []
 Probabilities = []
 
@@ -104,18 +99,6 @@ T_ljm = {} # shipping l -> j
 T_lkm = {} # shipping l -> k
 w_s = {} # penalty for not meeting demand above specified rate
 
-# variable values
-v_val_x_i = {}
-v_val_x_j = {}
-v_val_U_km = {}
-v_val_V1_lm = {}
-v_val_V2_lm = {}
-v_val_Q_im = {}
-v_val_Y_ijm = {}
-v_val_Z_jkm = {}
-v_val_T_ljm = {}
-v_val_T_lkm = {}
-v_val_w = {}
 
 # Dictionaries for analysis
 Cost_dict = {}
@@ -129,7 +112,7 @@ dic_grbOut = {}
 
 grbModel = Model('EVSS')
 
-def SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, s1):
+def SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, s1):
 
     for i in range(Manufacturing_plants):
         x_i[i] = grbModel.addVar(vtype = GRB.BINARY)
@@ -190,7 +173,7 @@ def SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distributi
 
 
     SetGrb_Obj(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, s1)
-    ModelCons(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, s1)
+    ModelCons(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, s1)
 
 def SolveModel():
     start_time = time.time()
@@ -289,7 +272,7 @@ def SetGrb_Obj(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, 
 
 # Model Constraints
 
-def ModelCons(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, s1):
+def ModelCons(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, s1):
 
     # Network Flow
 
@@ -335,8 +318,8 @@ def ModelCons(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, M
     text = f.read()
     f.close()
     solutions_str = text.split('\n')
-    for i in solutions_str:
-        exec(i.lstrip().rstrip())
+    v_val_x_i = ast.literal_eval(solutions_str[0])
+    v_val_x_j = ast.literal_eval(solutions_str[1])
 
     grbModel.addConstrs(x_i[i] >= v_val_x_i[i] for i in range(Manufacturing_plants))
     grbModel.addConstrs(x_j[j] >= v_val_x_j[j] for j in range(Distribution))
@@ -351,8 +334,8 @@ def save_results(instance, rl):
 
     return
 
-def run_Model(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, s1):
+def run_Model(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, s1):
 
-    SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, s1)
+    SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, s1)
     SolveModel()
     save_results(instance, rl)

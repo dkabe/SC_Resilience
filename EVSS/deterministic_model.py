@@ -324,9 +324,9 @@ def save_FirstStageDecisions(instance, s1, rl):
     ff = open("/home/dkabe/Model_brainstorming/EVSS/First_Stage_Decisions/" + "Instance_" + str(instance + 1) +  "/first_stage_" + str(s1) + "_" + str(rl) + ".txt", "w+")
     for i in range(len(v_values)):
         if i != len(v_values) - 1:
-            ff.write(values[i] + " = " + str(v_values[i]) + '\n')
+            ff.write(str(v_values[i]) + '\n')
         else:
-            ff.write(values[i] + " = " + str(v_values[i]))
+            ff.write(str(v_values[i]))
     ff.close()
     return
 
