@@ -189,40 +189,17 @@ def SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distributi
                 w_s[s,k,m] = grbModel.addVar(vtype = GRB.CONTINUOUS)
 
 
-    SetGrb_Obj()
+    SetGrb_Obj(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, s1)
     ModelCons(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, s1)
 
 def SolveModel():
-
+    start_time = time.time()
     grbModel.params.OutputFlag = 0
     grbModel.optimize()
-
-    global v_val_x_i 
-    global v_val_x_j 
-    global v_val_U_km 
-    global v_val_V1_lm 
-    global v_val_V2_lm 
-    global v_val_Q_im 
-    global v_val_Y_ijm 
-    global v_val_Z_jkm 
-    global v_val_T_ljm 
-    global v_val_T_lkm 
-    global v_val_w 
-
-    # get variable values
-    v_val_x_i = grbModel.getAttr('x', x_i)
-    v_val_x_j = grbModel.getAttr('x', x_j)
-    v_val_U_km = grbModel.getAttr('x', U_km)
-    v_val_V1_lm = grbModel.getAttr('x', V1_lm)
-    v_val_V2_lm = grbModel.getAttr('x', V2_lm)
-    v_val_Q_im = grbModel.getAttr('x', Q_im)
-    v_val_Y_ijm = grbModel.getAttr('x', Y_ijm)
-    v_val_Z_jkm = grbModel.getAttr('x', Z_jkm)
-    v_val_T_ljm = grbModel.getAttr('x', T_ljm)
-    v_val_T_lkm = grbModel.getAttr('x', T_lkm)
-    v_val_w = grbModel.getAttr('x', w_lm)
+    end_time = time.time()
 
     Summary_dict['obj'] = grbModel.objval
+    Summary_dict['CPU'] = end_time - start_time
 
     return
 
@@ -304,7 +281,7 @@ def SetGrb_Obj(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, 
             for m in range(Products):
                 rl_penalty += Probabilities[instance][s]*lost_sales[instance][k][m]*w_s[s,k,m]*demand[instance][s][m][k]
 
-    grb_expr += OC_1 + OC_2 + (total_shipment + total_pr_cost + total_b_cost + total_l_cost)
+    grb_expr += OC_1 + OC_2 + (total_shipment + total_pr_cost + total_b_cost + total_l_cost + rl_penalty)
 
     grbModel.setObjective(grb_expr, GRB.MINIMIZE)
 
@@ -368,7 +345,7 @@ def ModelCons(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, M
 
 def save_results(instance, rl):
     f = open("/home/dkabe/Model_brainstorming/EVSS/V_Det/" + "Instance_" + str(instance + 1) + "/v_det_" + str(rl) + ".txt", "a")
-    f.write(str(Summary_dict['obj']))
+    f.write(str(Summary_dict['obj']) + '\t' + str(Summary_dict['CPU'])) 
     f.write('\n')
     f.close()
 
@@ -378,3 +355,4 @@ def run_Model(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, M
 
     SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, s1)
     SolveModel()
+    save_results(instance, rl)
