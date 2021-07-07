@@ -321,8 +321,8 @@ def ModelCons(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, M
     v_val_x_i = ast.literal_eval(solutions_str[0])
     v_val_x_j = ast.literal_eval(solutions_str[1])
 
-    grbModel.addConstrs(x_i[i] >= v_val_x_i[i] for i in range(Manufacturing_plants))
-    grbModel.addConstrs(x_j[j] >= v_val_x_j[j] for j in range(Distribution))
+    grbModel.addConstrs(x_i[i] == v_val_x_i[i] for i in range(Manufacturing_plants))
+    grbModel.addConstrs(x_j[j] == v_val_x_j[j] for j in range(Distribution))
 
     return
 
