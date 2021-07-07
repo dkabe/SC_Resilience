@@ -127,9 +127,6 @@ objWeights = {}
 # Dictionary to save values of each objectives
 dic_grbOut = {}
 
-
-first_stage_decisions = {}
-
 grbModel_det = Model('deterministic')
 
 def SetGurobiModel_det(instance, rl, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, s1):
@@ -265,7 +262,13 @@ def SetGrb_Obj_det(instance, rl, Manufacturing_plants, Distribution, Market, Pro
 
     total_l_cost += l_cost
 
-    grb_expr += OC_1 + OC_2 + (total_shipment + total_pr_cost + total_b_cost + total_l_cost)
+    # Penalties 
+    rl_penalty = 0
+    for k in range(Market):
+        for m in range(Products):
+            rl_penalty += lost_sales[instance][k][m]*w_s[k,m]*demand[instance][s1][m][k]
+
+    grb_expr += OC_1 + OC_2 + (total_shipment + total_pr_cost + total_b_cost + total_l_cost + rl_penalty)
 
     grbModel_det.setObjective(grb_expr, GRB.MINIMIZE)
 

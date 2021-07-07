@@ -8,7 +8,7 @@ numScenarios = [32, 128, 200, 200, 128, 200]
 epsilons = [200, 400, 600, 800, 1500000, 700000]
 rl = [0.95]
 
-for instance in range(5,6):    
+for instance in range(4,6):    
     for r_level in rl:
         for scen in range(numScenarios[instance]):
             start_time = time.time()
