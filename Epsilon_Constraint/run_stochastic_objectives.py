@@ -313,6 +313,23 @@ def ModelCons(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, M
     # Resilience Metric (w = % of rl being missed)
     grbModel.addConstrs(w_s[s,k,m] >= rl - (1 - U_km[s,k,m]/demand[instance][s][m][k]) for s in range(num_Scenarios) for k in range(Market) for m in range(Products))
 
+    # Objective constraints
+    grbModel.addConstr(quicksum(f_i[instance][i]*x_i[i] for i in range(Manufacturing_plants)) + quicksum(f_j[instance][j]*x_j[j] for j in range(Distribution)) +
+                        quicksum(Probabilities[instance][s]*Transportation_i_j[instance][m][i][j]*Y_ijm[s,m,i,j] for s in range(num_Scenarios) for m in range(Products) for i in range(Manufacturing_plants) for j in range(Distribution))
+                        + quicksum(Probabilities[instance][s]*Transportation_j_k[instance][m][j][k]*Z_jkm[s,m,j,k] for s in range(num_Scenarios) for m in range(Products) for j in range(Distribution) for k in range(Market))
+                        + quicksum(Probabilities[instance][s]*Manufacturing_costs[instance][i][m]*Q_im[s,m,i] for s in range(num_Scenarios) for m in range(Products) for i in range(Manufacturing_plants)) <= 1)
+    
+    grbModel.addConstr(quicksum(Probabilities[instance][s]*(Supplier_cost[instance][0][m][l]*V1_lm[s,m,l] + Supplier_cost[instance][1][m][l]*V2_lm[s,m,l]) for s in range(num_Scenarios) for m in range(Products) for l in range(Outsourced)) +
+                    quicksum(Probabilities[instance][s]*T_O_DC[instance][m][l][j]*T_ljm[s,m,l,j] for s in range(num_Scenarios) for m in range(Products) for l in range(Outsourced) for j in range(Distribution)) +
+                    quicksum(Probabilities[instance][s]*T_O_MZ[instance][m][l][k]*T_lkm[s,m,l,k] for s in range(num_Scenarios) for m in range(Products) for l in range(Outsourced) for k in range(Market)) <= 1)
+    
+
+    grbModel.addConstr(quicksum(Probabilities[instance][s]*lost_sales[instance][k][m]*U_km[s,k,m] for s in range(num_Scenarios) for m in range(Products) for k in range(Market)) <= 1)
+
+    grbModel.addConstr(quicksum(Probabilities[instance][s]*lost_sales[instance][k][m]*w_s[s,k,m]*demand[instance][s][m][k] for s in range(num_Scenarios) for m in range(Products) for k in range(Market)) <= 1)
+
+
+
     return
 
 def get_opening_costs(instance, x1, x2, Manufacturing_plants, Distribution):
@@ -427,7 +444,7 @@ def get_rl_rate(w, instance, num_Scenarios, Market, Products):
 def PrintToFileSummaryResults():
     results_file = "/home/dkabe/Model_brainstorming/Epsilon_Constraint/objective_results.txt"
     ff = open(results_file, "a")
-    ff.write(str(Summary_dict['ObjVal']))
+    ff.write(str(Summary_dict['ObjVal']) + '\t')
     ff.write(str(Summary_dict['CPU']))
     ff.write('\n')
     ff.close()
@@ -440,4 +457,4 @@ def run_Model(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, M
 
     SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon)
     SolveModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced)
-    #PrintToFileSummaryResults()
+    PrintToFileSummaryResults()

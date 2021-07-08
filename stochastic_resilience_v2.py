@@ -252,18 +252,7 @@ def SolveModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, 
     Summary_dict['Demand_outsourced'] = np.sum([Probabilities[instance][s]*Summary_dict["Purchasing_" + str(s)]/np.sum(demand[instance][s]) for s in range(num_Scenarios)])
     end_time = time.time()
 
-    Summary_dict['CPU'] = end_time - start_time  
-    #print("obj val: ", Summary_dict['ObjVal'])
-    #print("Opening Decisions: ", sum(v_val_x_i.values()), sum(v_val_x_j.values()))
-    #print('In house Cost: ', Cost_dict["f1"])
-    #print('Outsource Cost: ', Cost_dict["f2"])
-    #print('Lost Sales: ', Cost_dict["f3"])
-    #print('Demand Penalties: ', Cost_dict["f4"])
-    #print('Unweighted Demand purchased from outsourcing: ', np.mean([Summary_dict["Purchasing_" + str(s)]/np.sum(demand[instance][s]) for s in range(num_Scenarios)]))
-    #print('Demand being met: ', Summary_dict['Demand_met'])
-    #print('Weighted Demand purchased from outsourcing: ', Summary_dict['Demand_outsourced'])
-    #print('Gap: ', gap)
-
+    Summary_dict['CPU'] = end_time - start_time 
     
     return
 
