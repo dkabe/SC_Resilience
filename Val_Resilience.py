@@ -93,7 +93,7 @@ objWeights = {}
 # Dictionary to save values of each objectives
 dic_grbOut = {}
 
-grbModel = Model('stochasticResil')
+grbModel = Model()
 
 def SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products):
 

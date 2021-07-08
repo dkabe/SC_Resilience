@@ -40,7 +40,6 @@ T_O_DC = [None]*instances
 T_O_MZ = [None]*instances
 lost_sales = [None]*instances
 demand = [None]*instances
-compatibility = [None]*instances
 
 for instance in range(instances):
     # Cost of Opening
@@ -74,10 +73,6 @@ for instance in range(instances):
 
     # Supplier cost
     Supplier_cost[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/SupplierCost_' + str(instance + 1) + '.txt').reshape((levels, Products[instance], Outsourced[instance]))
-
-    # Compatibility of plants to products
-    compatibility[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/Compatibilities_' + str(instance + 1) + '.txt')
-
 
 Scenarios = []
 Probabilities = []

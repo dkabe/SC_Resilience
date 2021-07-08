@@ -42,7 +42,6 @@ T_O_DC = [None]*instances
 T_O_MZ = [None]*instances
 lost_sales = [None]*instances
 demand = [None]*instances
-compatibility = [None]*instances
 
 for instance in range(instances):
     # Cost of Opening
@@ -76,10 +75,6 @@ for instance in range(instances):
 
     # Supplier cost
     Supplier_cost[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/SupplierCost_' + str(instance + 1) + '.txt').reshape((levels, Products[instance], Outsourced[instance]))
-
-    # Compatibility of plants to products
-    compatibility[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/Compatibilities_' + str(instance + 1) + '.txt')
-
 
 Scenarios = []
 Probabilities = []
@@ -392,11 +387,6 @@ def ModelCons(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, M
     grbModel.addConstrs((V1_lm[s,m,l] + V2_lm[s,m,l] <= (Capacities_l[instance][m][l])) for s in range(num_Scenarios)
                         for l in range(Outsourced) for m in range(Products))
     
-    # Compatibility Constraints
-    #grbModel.addConstrs(Q_im[s,m,i]  <= Scenarios[instance][s][0][i]*Capacities_i[instance][i]*x_i[i]*compatibility[instance][m][i]
-     #                   for m in range(Products) for s in range(num_Scenarios) for i in range(Manufacturing_plants))
-
-
     # Indicator variable constraints for step function 
     grbModel.addConstrs(V1_lm[s,m,l] <= epsilon for s in range(num_Scenarios) for m in range(Products) for l in range(Outsourced))
 
