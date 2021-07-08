@@ -19,8 +19,8 @@ rl = [0.5]
   #      for scen in range(81, 108):
    #         run_Model(instance, r_level, numScenarios[instance], MPs[instance], DCs[instance], MZs[instance], Products[instance], Outsourced[instance], epsilons[instance], scen)
 
-from stochastic_model_EVSS import *
 for instance in range(4,5):    
     for r_level in rl:
-        for scen in range(108, numScenarios[instance]):
+        for scen in range(119, numScenarios[instance]):
             run_Model(instance, r_level, numScenarios[instance], MPs[instance], DCs[instance], MZs[instance], Products[instance], Outsourced[instance], epsilons[instance], scen)
+            grbModel.reset()
