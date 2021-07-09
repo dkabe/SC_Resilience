@@ -10,7 +10,7 @@ rl = [0.75]
 
 for instance in range(4,5):    
     for r_level in rl:
-        for scen in range(90, numScenarios[instance]):
+        for scen in range(105, numScenarios[instance]):
             run_Model(instance, r_level, numScenarios[instance], MPs[instance], DCs[instance], MZs[instance], Products[instance], Outsourced[instance], epsilons[instance], scen)
             grbModel.reset()
 
