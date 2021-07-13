@@ -431,7 +431,7 @@ def get_rl_rate(w, instance, num_Scenarios, Market, Products):
     return(rl_penalty)
 
 def PrintToFileSummaryResults(instance):
-    results_file = '/home/dkabe/Model_brainstorming/Epsilon_Constraint/objective_results_' + str(instance + 1) + '.txt'
+    results_file = '/home/dkabe/Model_brainstorming/Epsilon_Constraint/Two_Objectives/objective_results_' + str(instance + 1) + '.txt'
     ff = open(results_file, "a")
     ff.write(str(Summary_dict['ObjVal']))
     ff.write('\n')
