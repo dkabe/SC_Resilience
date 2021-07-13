@@ -44,6 +44,7 @@ T_O_MZ = [None]*instances
 lost_sales = [None]*instances
 demand = [None]*instances
 z = [None]*instances
+z2 = [None]*instances 
 
 for instance in range(instances):
     # Cost of Opening
@@ -80,9 +81,15 @@ for instance in range(instances):
 
 
     # Objectives for epsilon-constraint
-    path = '/home/dkabe/Model_brainstorming/Epsilon_Constraint/objective_results_' + str(instance + 1) + '.txt'
-    if os.path.exists(path):
-        z[instance] = np.loadtxt(path)
+    temp_path = '/home/dkabe/Model_brainstorming/Epsilon_Constraint/Four_Objectives/objective_results_' + str(instance + 1) + '.txt'
+    if os.path.exists(temp_path):
+        z[instance] = np.loadtxt(temp_path)
+
+    temp_path = '/home/dkabe/Model_brainstorming/Epsilon_Constraint/Four_Objectives/payoff_results_' + str(instance + 1) + '.txt'
+    if os.path.exists(temp_path):
+        z2[instance] = np.loadtxt(temp_path)
+
+
 Scenarios = []
 Probabilities = []
 
@@ -133,7 +140,7 @@ dic_grbOut = {}
 
 grbModel = Model('stochasticResil')
 
-def SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon):
+def SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, f1, f2, fix_f1, fix_f2):
 
     global x_i 
     global x_j 
@@ -161,11 +168,11 @@ def SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distributi
 
 
     SetGrb_Obj(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced)
-    ModelCons(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon)
+    ModelCons(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, f1, f2, f3, f4, fix_f1, fix_f2, fix_f3, fix_f4)
 
 def SolveModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced):
-    grbModel.params.OutputFlag = 0
-    grbModel.params.timelimit = 900
+    grbModel.params.OutputFlag = 1
+    #grbModel.params.timelimit = 900
     start_time = time.time()
     grbModel.optimize()
     #gap = grbModel.MIPGAP
@@ -183,12 +190,53 @@ def SolveModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, 
     global v_val_T_lkm 
     global v_val_w 
 
-    
+    v_val_x_i = grbModel.getAttr('x', x_i)
+    v_val_x_j = grbModel.getAttr('x', x_j)
+    v_val_U_km = grbModel.getAttr('x', U_km)
+    v_val_V1_lm = grbModel.getAttr('x', V1_lm)
+    v_val_V2_lm = grbModel.getAttr('x', V2_lm)
+    v_val_Q_im = grbModel.getAttr('x', Q_im)
+    v_val_Y_ijm = grbModel.getAttr('x', Y_ijm)
+    v_val_Z_jkm = grbModel.getAttr('x', Z_jkm)
+    v_val_T_ljm = grbModel.getAttr('x', T_ljm)
+    v_val_T_lkm = grbModel.getAttr('x', T_lkm)
+    v_val_w = grbModel.getAttr('x', w_s)
+    Cost_dict["Opening"] =  get_opening_costs(instance, v_val_x_i, v_val_x_j, Manufacturing_plants, Distribution)
+
+    Cost_dict["f4"] = np.round(get_rl_rate(v_val_w, instance, num_Scenarios, Market, Products), 2)
+
     Summary_dict['ObjVal'] = grbModel.objval
     end_time = time.time()
+    for s in range(num_Scenarios):
+        Summary_dict["Purchasing_" + str(s)] = sum([v_val_V1_lm[(s,m,l)] +  v_val_V2_lm[(s,m,l)] for m in range(Products) for l in range(Outsourced)])
+        Summary_dict["Production_" + str(s)] = sum([v_val_Q_im[(s,m,i)] for m in range(Products) for i in range(Manufacturing_plants)])
+        Summary_dict["LostSales_" + str(s)] = sum([v_val_U_km[(s,k,m)] for m in range(Products) for k in range(Market)])
+        Summary_dict["OutsourceToDC_" + str(s)] = sum([v_val_T_ljm[(s,m,l,j)] for m in range(Products) for l in range(Outsourced) for j in range(Distribution)])
+        Summary_dict["OutsourceToMarket_" + str(s)] = sum([v_val_T_lkm[(s,m,l,k)] for m in range(Products) for l in range(Outsourced) for k in range(Market)])
 
+    for s in range(num_Scenarios):
+        Cost_dict["InHouseShipping_" + str(s)] = get_shipping_costs(instance, s,v_val_Y_ijm, v_val_Z_jkm, v_val_T_ljm, v_val_T_lkm, Manufacturing_plants, Distribution, Products, Market, Outsourced)[0]
+        Cost_dict["OutsourceShipping_" + str(s)] = get_shipping_costs(instance, s,v_val_Y_ijm, v_val_Z_jkm, v_val_T_ljm, v_val_T_lkm, Manufacturing_plants, Distribution, Products, Market, Outsourced)[1]
+        Cost_dict["Production_" + str(s)] = get_production_cost(instance, s,v_val_Q_im, Manufacturing_plants, Products)
+        Cost_dict["Purchasing_" + str(s)] = get_purchase_costs(instance, s,v_val_V1_lm, v_val_V2_lm, Outsourced, Products)
+        Cost_dict["LostSales_" + str(s)] = get_lost_cost(instance, s,v_val_U_km, Market, Products)    
+
+    f1_cost = 0
+    f2_cost = 0
+    f3_cost = 0
+    for s in range(num_Scenarios):
+        f1_cost += Probabilities[instance][s]*(Cost_dict['Production_' + str(s)] + Cost_dict['InHouseShipping_' + str(s)])
+        f2_cost += Probabilities[instance][s]*(Cost_dict['Purchasing_' + str(s)] + Cost_dict['OutsourceShipping_' + str(s)])
+        f3_cost +=  Probabilities[instance][s]*Cost_dict['LostSales_' + str(s)]
+    Cost_dict["f1"] = np.round(Cost_dict["Opening"] + f1_cost, 2) # in house (opening + production + shipping)
+    Cost_dict["f2"] = np.round(f2_cost, 2) # Outsourcing # (purchasing + shipping)
+    Cost_dict["f3"] = np.round(f3_cost, 2) # lost sales
     Summary_dict['CPU'] = end_time - start_time  
-        
+    print(Cost_dict["f1"])
+    print(Cost_dict["f2"])
+    print(Cost_dict["f3"])
+
+    print(Cost_dict["f4"])
     return
 
 # Objective
@@ -279,7 +327,7 @@ def SetGrb_Obj(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, 
 
     # Model Constraints
 
-def ModelCons(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, f1, f2, f3, f4):
+def ModelCons(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, f1, f2, f3, f4, fix_f1, fix_f2, fix_f3, fix_f4):
 
     # Network Flow
 
@@ -337,6 +385,56 @@ def ModelCons(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, M
 
     if f4:
         grbModel.addConstr(quicksum(Probabilities[instance][s]*lost_sales[instance][k][m]*w_s[s,k,m]*demand[instance][s][m][k] for s in range(num_Scenarios) for m in range(Products) for k in range(Market)) <= z[instance][3])
+    
+    if fix_f1:
+        if f2:
+             grbModel.addConstr(quicksum(f_i[instance][i]*x_i[i] for i in range(Manufacturing_plants)) + quicksum(f_j[instance][j]*x_j[j] for j in range(Distribution)) +
+                            quicksum(Probabilities[instance][s]*Transportation_i_j[instance][m][i][j]*Y_ijm[s,m,i,j] for s in range(num_Scenarios) for m in range(Products) for i in range(Manufacturing_plants) for j in range(Distribution))
+                            + quicksum(Probabilities[instance][s]*Transportation_j_k[instance][m][j][k]*Z_jkm[s,m,j,k] for s in range(num_Scenarios) for m in range(Products) for j in range(Distribution) for k in range(Market))
+                            + quicksum(Probabilities[instance][s]*Manufacturing_costs[instance][i][m]*Q_im[s,m,i] for s in range(num_Scenarios) for m in range(Products) for i in range(Manufacturing_plants)) <= z2[instance][3])
+        elif f3:
+            grbModel.addConstr(quicksum(f_i[instance][i]*x_i[i] for i in range(Manufacturing_plants)) + quicksum(f_j[instance][j]*x_j[j] for j in range(Distribution)) +
+                            quicksum(Probabilities[instance][s]*Transportation_i_j[instance][m][i][j]*Y_ijm[s,m,i,j] for s in range(num_Scenarios) for m in range(Products) for i in range(Manufacturing_plants) for j in range(Distribution))
+                            + quicksum(Probabilities[instance][s]*Transportation_j_k[instance][m][j][k]*Z_jkm[s,m,j,k] for s in range(num_Scenarios) for m in range(Products) for j in range(Distribution) for k in range(Market))
+                            + quicksum(Probabilities[instance][s]*Manufacturing_costs[instance][i][m]*Q_im[s,m,i] for s in range(num_Scenarios) for m in range(Products) for i in range(Manufacturing_plants)) <= z2[instance][6])
+        else:
+            grbModel.addConstr(quicksum(f_i[instance][i]*x_i[i] for i in range(Manufacturing_plants)) + quicksum(f_j[instance][j]*x_j[j] for j in range(Distribution)) +
+                            quicksum(Probabilities[instance][s]*Transportation_i_j[instance][m][i][j]*Y_ijm[s,m,i,j] for s in range(num_Scenarios) for m in range(Products) for i in range(Manufacturing_plants) for j in range(Distribution))
+                            + quicksum(Probabilities[instance][s]*Transportation_j_k[instance][m][j][k]*Z_jkm[s,m,j,k] for s in range(num_Scenarios) for m in range(Products) for j in range(Distribution) for k in range(Market))
+                            + quicksum(Probabilities[instance][s]*Manufacturing_costs[instance][i][m]*Q_im[s,m,i] for s in range(num_Scenarios) for m in range(Products) for i in range(Manufacturing_plants)) <= z2[instance][9])
+    
+    if fix_f2:
+        if f1:
+             grbModel.addConstr(quicksum(Probabilities[instance][s]*(Supplier_cost[instance][0][m][l]*V1_lm[s,m,l] + Supplier_cost[instance][1][m][l]*V2_lm[s,m,l]) for s in range(num_Scenarios) for m in range(Products) for l in range(Outsourced)) +
+                        quicksum(Probabilities[instance][s]*T_O_DC[instance][m][l][j]*T_ljm[s,m,l,j] for s in range(num_Scenarios) for m in range(Products) for l in range(Outsourced) for j in range(Distribution)) +
+                        quicksum(Probabilities[instance][s]*T_O_MZ[instance][m][l][k]*T_lkm[s,m,l,k] for s in range(num_Scenarios) for m in range(Products) for l in range(Outsourced) for k in range(Market)) <= z2[instance][0])
+        elif f3:
+             grbModel.addConstr(quicksum(Probabilities[instance][s]*(Supplier_cost[instance][0][m][l]*V1_lm[s,m,l] + Supplier_cost[instance][1][m][l]*V2_lm[s,m,l]) for s in range(num_Scenarios) for m in range(Products) for l in range(Outsourced)) +
+                        quicksum(Probabilities[instance][s]*T_O_DC[instance][m][l][j]*T_ljm[s,m,l,j] for s in range(num_Scenarios) for m in range(Products) for l in range(Outsourced) for j in range(Distribution)) +
+                        quicksum(Probabilities[instance][s]*T_O_MZ[instance][m][l][k]*T_lkm[s,m,l,k] for s in range(num_Scenarios) for m in range(Products) for l in range(Outsourced) for k in range(Market)) <= z2[instance][7])
+        else:
+            grbModel.addConstr(quicksum(Probabilities[instance][s]*(Supplier_cost[instance][0][m][l]*V1_lm[s,m,l] + Supplier_cost[instance][1][m][l]*V2_lm[s,m,l]) for s in range(num_Scenarios) for m in range(Products) for l in range(Outsourced)) +
+                        quicksum(Probabilities[instance][s]*T_O_DC[instance][m][l][j]*T_ljm[s,m,l,j] for s in range(num_Scenarios) for m in range(Products) for l in range(Outsourced) for j in range(Distribution)) +
+                        quicksum(Probabilities[instance][s]*T_O_MZ[instance][m][l][k]*T_lkm[s,m,l,k] for s in range(num_Scenarios) for m in range(Products) for l in range(Outsourced) for k in range(Market)) <= z2[instance][10])
+    
+    if fix_f3:
+        if f1:
+            grbModel.addConstr(quicksum(Probabilities[instance][s]*lost_sales[instance][k][m]*U_km[s,k,m] for s in range(num_Scenarios) for m in range(Products) for k in range(Market)) <= z2[instance][1])
+
+        elif f2:
+            grbModel.addConstr(quicksum(Probabilities[instance][s]*lost_sales[instance][k][m]*U_km[s,k,m] for s in range(num_Scenarios) for m in range(Products) for k in range(Market)) <= z2[instance][4])
+
+        else:
+            grbModel.addConstr(quicksum(Probabilities[instance][s]*lost_sales[instance][k][m]*U_km[s,k,m] for s in range(num_Scenarios) for m in range(Products) for k in range(Market)) <= z2[instance][11])
+    
+    if fix_f4:
+        if f1:
+            grbModel.addConstr(quicksum(Probabilities[instance][s]*lost_sales[instance][k][m]*w_s[s,k,m]*demand[instance][s][m][k] for s in range(num_Scenarios) for m in range(Products) for k in range(Market)) <= z2[instance][2])
+        elif f2:
+            grbModel.addConstr(quicksum(Probabilities[instance][s]*lost_sales[instance][k][m]*w_s[s,k,m]*demand[instance][s][m][k] for s in range(num_Scenarios) for m in range(Products) for k in range(Market)) <= z2[instance][5])
+        else:
+            grbModel.addConstr(quicksum(Probabilities[instance][s]*lost_sales[instance][k][m]*w_s[s,k,m]*demand[instance][s][m][k] for s in range(num_Scenarios) for m in range(Products) for k in range(Market)) <= z2[instance][8])
+
 
     return
 
@@ -450,7 +548,15 @@ def get_rl_rate(w, instance, num_Scenarios, Market, Products):
     return(rl_penalty)
 
 def PrintToFileSummaryResults(instance):
-    results_file = '/home/dkabe/Model_brainstorming/Epsilon_Constraint/objective_results_' + str(instance + 1) + '.txt'
+    results_file = '/home/dkabe/Model_brainstorming/Epsilon_Constraint/Four_Objectives/objective_results_' + str(instance + 1) + '.txt'
+    ff = open(results_file, "a")
+    ff.write(str(Summary_dict['ObjVal']))
+    ff.write('\n')
+    ff.close()
+    return
+
+def SavePayoffTable(instance):
+    results_file = '/home/dkabe/Model_brainstorming/Epsilon_Constraint/Four_Objectives/payoff_results_' + str(instance + 1) + '.txt'
     ff = open(results_file, "a")
     ff.write(str(Summary_dict['ObjVal']))
     ff.write('\n')
@@ -458,10 +564,11 @@ def PrintToFileSummaryResults(instance):
     return
 
 
-def run_Model(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, objDict):
+def run_Model(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, objDict, f1, f2, f3, f4, fix_f1, fix_f2, fix_f3, fix_f4):
     for key, value in objDict.items():
         objWeights[key] = value
 
-    SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon)
+    SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, f1, f2, f3, f4, fix_f1, fix_f2, fix_f3, fix_f4)
     SolveModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced)
     #PrintToFileSummaryResults()
+    SavePayoffTable(instance)
