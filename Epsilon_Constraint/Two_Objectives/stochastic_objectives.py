@@ -430,8 +430,8 @@ def get_rl_rate(w, instance, num_Scenarios, Market, Products):
 
     return(rl_penalty)
 
-def PrintToFileSummaryResults(instance):
-    results_file = '/home/dkabe/Model_brainstorming/Epsilon_Constraint/Two_Objectives/objective_results_' + str(instance + 1) + '.txt'
+def PrintToFileSummaryResults(instance, rl):
+    results_file = '/home/dkabe/Model_brainstorming/Epsilon_Constraint/Two_Objectives/Instance_' + str(instance + 1) + '/objective_results_' + str(instance + 1) + '_' + str(rl) + '.txt'
     ff = open(results_file, "a")
     ff.write(str(Summary_dict['ObjVal']))
     ff.write('\n')
@@ -444,4 +444,4 @@ def run_Model(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, M
 
     SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon)
     SolveModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced)
-    PrintToFileSummaryResults(instance)
+    PrintToFileSummaryResults(instance, rl)

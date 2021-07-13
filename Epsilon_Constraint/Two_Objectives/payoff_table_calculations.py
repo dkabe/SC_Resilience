@@ -43,8 +43,8 @@ T_O_DC = [None]*instances
 T_O_MZ = [None]*instances
 lost_sales = [None]*instances
 demand = [None]*instances
-z = [None]*instances
-z2 = [None]*instances 
+z = []
+z2 = [] 
 
 for instance in range(instances):
     # Cost of Opening
@@ -78,17 +78,6 @@ for instance in range(instances):
 
     # Supplier cost
     Supplier_cost[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/SupplierCost_' + str(instance + 1) + '.txt').reshape((levels, Products[instance], Outsourced[instance]))
-
-
-    # Objectives for epsilon-constraint
-    temp_path = '/home/dkabe/Model_brainstorming/Epsilon_Constraint/Two_Objectives/objective_results_' + str(instance + 1) + '.txt'
-    if os.path.exists(temp_path):
-        z[instance] = np.loadtxt(temp_path)
-
-    temp_path = '/home/dkabe/Model_brainstorming/Epsilon_Constraint/Two_Objectives/payoff_results_' + str(instance + 1) + '.txt'
-    if os.path.exists(temp_path):
-        z2[instance] = np.loadtxt(temp_path)
-
 
 Scenarios = []
 Probabilities = []
@@ -140,6 +129,11 @@ dic_grbOut = {}
 
 grbModel = Model('stochasticResil')
 
+def InitializeModelParams(instance, rl):
+    global z
+    temp_path = '/home/dkabe/Model_brainstorming/Epsilon_Constraint/Two_Objectives/Instance_' + str(instance + 1) + '/objective_results_' + str(instance + 1) + '_' + str(rl) + '.txt'
+    z = np.loadtxt(temp_path)
+   
 def SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, f1, f2):
 
     global x_i 
@@ -171,7 +165,7 @@ def SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distributi
     ModelCons(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, f1, f2)
 
 def SolveModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced):
-    grbModel.params.OutputFlag = 0
+    grbModel.params.OutputFlag = 1
     #grbModel.params.timelimit = 900
     start_time = time.time()
     grbModel.optimize()
@@ -374,10 +368,10 @@ def ModelCons(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, M
                             + quicksum(Probabilities[instance][s]*(Supplier_cost[instance][0][m][l]*V1_lm[s,m,l] + Supplier_cost[instance][1][m][l]*V2_lm[s,m,l]) for s in range(num_Scenarios) for m in range(Products) for l in range(Outsourced))
                         + quicksum(Probabilities[instance][s]*T_O_DC[instance][m][l][j]*T_ljm[s,m,l,j] for s in range(num_Scenarios) for m in range(Products) for l in range(Outsourced) for j in range(Distribution))
                         + quicksum(Probabilities[instance][s]*T_O_MZ[instance][m][l][k]*T_lkm[s,m,l,k] for s in range(num_Scenarios) for m in range(Products) for l in range(Outsourced) for k in range(Market)) 
-                        + quicksum(Probabilities[instance][s]*lost_sales[instance][k][m]*U_km[s,k,m] for s in range(num_Scenarios) for m in range(Products) for k in range(Market)) <= z[instance][0])
+                        + quicksum(Probabilities[instance][s]*lost_sales[instance][k][m]*U_km[s,k,m] for s in range(num_Scenarios) for m in range(Products) for k in range(Market)) <= z[0])
     
     if f2:
-        grbModel.addConstr(quicksum(Probabilities[instance][s]*lost_sales[instance][k][m]*w_s[s,k,m]*demand[instance][s][m][k] for s in range(num_Scenarios) for m in range(Products) for k in range(Market)) <= z[instance][1])
+        grbModel.addConstr(quicksum(Probabilities[instance][s]*lost_sales[instance][k][m]*w_s[s,k,m]*demand[instance][s][m][k] for s in range(num_Scenarios) for m in range(Products) for k in range(Market)) <= z[1])
     
     return
 
@@ -498,8 +492,8 @@ def PrintToFileSummaryResults(instance):
     ff.close()
     return
 
-def SavePayoffTable(instance):
-    results_file = '/home/dkabe/Model_brainstorming/Epsilon_Constraint/Two_Objectives/payoff_results_' + str(instance + 1) + '.txt'
+def SavePayoffTable(instance, rl):
+    results_file = '/home/dkabe/Model_brainstorming/Epsilon_Constraint/Two_Objectives/Instance_' + str(instance + 1) + '/payoff_results_' + str(instance + 1) + '_' + str(rl) +'.txt'
     ff = open(results_file, "a")
     ff.write(str(Summary_dict['ObjVal']))
     ff.write('\n')
@@ -511,7 +505,8 @@ def run_Model(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, M
     for key, value in objDict.items():
         objWeights[key] = value
 
+    InitializeModelParams(instance, rl)
     SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, f1, f2)
     SolveModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced)
-    #PrintToFileSummaryResults()
-    SavePayoffTable(instance)
+    #PrintToFileSummaryResults(instance)
+    SavePayoffTable(instance, rl)
