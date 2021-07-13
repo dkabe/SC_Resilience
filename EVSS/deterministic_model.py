@@ -182,6 +182,7 @@ def SolveModel_det():
     global v_val_x_j
     v_val_x_i = grbModel_det.getAttr('x', x_i)
     v_val_x_j = grbModel_det.getAttr('x', x_j)
+    Summary_dict['Obj'] = grbModel_det.objval
     
     return
 
@@ -325,8 +326,17 @@ def save_FirstStageDecisions(instance, s1, rl):
     ff.close()
     return
 
+def save_objectives(instance, rl):
+    ff = open("/home/dkabe/Model_brainstorming/EVSS/EVPI_objectives/" + "Instance_" + str(instance + 1) + "/objectives_" + str(rl) + ".txt", "a")
+    ff.write(str(Summary_dict['Obj']))
+    ff.write('\n')
+    ff.close()
+    return
+
 def run_Model_det(instance, rl, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, s1):
 
     SetGurobiModel_det(instance, rl, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, s1)
     SolveModel_det()
-    save_FirstStageDecisions(instance, s1, rl) 
+    #save_FirstStageDecisions(instance, s1, rl) 
+    save_objectives(instance, rl)
+
