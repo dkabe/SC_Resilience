@@ -270,7 +270,7 @@ def SetGrb_Obj(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, 
             for m in range(Products):
                 rl_penalty += Probabilities[instance][s]*lost_sales[instance][k][m]*w_s[s,k,m]*demand[instance][s][m][k]
 
-    grb_expr += objWeights['f1']*(OC_1 + OC_2 + total_shipment_inhouse + total_pr_cost + total_b_cost + total_shipment_outsource + total_l_cost) + objWeights['f2']*rl_penalty
+    grb_expr += objWeights['f1']*(OC_1 + OC_2 + total_shipment_inhouse + total_pr_cost + total_b_cost + total_shipment_outsource) + objWeights['f2']*(total_l_cost + rl_penalty)
 
     grbModel.setObjective(grb_expr, GRB.MINIMIZE)
 
