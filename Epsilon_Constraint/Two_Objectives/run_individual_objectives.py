@@ -1,4 +1,4 @@
-from stochastic_objectives import *
+from individual_objectives import *
 import time
 instances = 6
 MPs = [2, 3, 4, 6, 6, 6]
