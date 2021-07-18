@@ -10,6 +10,6 @@ rl = 0.95
 instance = 4
 resolution = 20
 
-for res in range(10, resolution):
-    run_Model(instance, rl, numScenarios[instance], MPs[instance], DCs[instance], MZs[instance], Products[instance], Outsourced[instance], epsilons[instance], {'f1': 1, 'f2': 0}, 0, 1, res)
+for res in range(resolution):
+    run_Model(instance, rl, numScenarios[instance], MPs[instance], DCs[instance], MZs[instance], Products[instance], Outsourced[instance], epsilons[instance], {'f1': 0, 'f2': 1}, 1, 0, res)
     print("Done")
