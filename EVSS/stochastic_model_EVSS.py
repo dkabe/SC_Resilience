@@ -146,13 +146,10 @@ def SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distributi
     ModelCons(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, s1)
 
 def SolveModel():
-    start_time = time.time()
     grbModel.params.OutputFlag = 0
     grbModel.optimize()
-    end_time = time.time()
 
     Summary_dict['obj'] = grbModel.objval
-    Summary_dict['CPU'] = end_time - start_time
 
     return
 
@@ -303,7 +300,7 @@ def ModelCons(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, M
 
 def save_results(instance, rl):
     f = open("/home/dkabe/Model_brainstorming/EVSS/V_Det/" + "Instance_" + str(instance + 1) + "/v_det_" + str(rl) + ".txt", "a")
-    f.write(str(Summary_dict['obj']) + '\t' + str(Summary_dict['CPU'])) 
+    f.write(str(Summary_dict['obj'])) 
     f.write('\n')
     f.close()
 
