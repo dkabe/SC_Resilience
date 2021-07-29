@@ -8,7 +8,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import itertools
 import ast 
-
+import os
 # Read input files
 #path = "C:/Users/Devika Kabe/Documents/Model_brainstorming/Input_Data/"
 path = "/home/dkabe/Model_brainstorming/Input_Data/"
@@ -449,6 +449,8 @@ def PrintToFileSummaryResults(num_Scenarios):
 
 def SaveOpeningDecisions(num_Scenarios, batch):
     results_file = "/home/dkabe/Model_brainstorming/SAA_Analysis/Opening_Decisions/" + str(num_Scenarios) + "_scenarios/" + str(num_Scenarios) + "_" + str(batch) + "_opening_decisions" + ".txt"
+    if os.path.exists(results_file):
+        os.remove(results_file)
     ff = open(results_file, "a")
     ff.write(str(v_val_x_i) + '\n')
     ff.write(str(v_val_x_j))
@@ -456,10 +458,10 @@ def SaveOpeningDecisions(num_Scenarios, batch):
     return
 
 
-def run_Model(batch, instance=5, rl=0.5, num_Scenarios=50, Manufacturing_plants=6, Distribution=4, Market=29, Products=3, Outsourced=3, epsilon=700000):
+def run_Model(batch, instance=5, rl=0.5, num_Scenarios=250, Manufacturing_plants=6, Distribution=4, Market=29, Products=3, Outsourced=3, epsilon=700000):
     
     InitializeModelParams(num_Scenarios, Market, Products, batch)
     SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon)
     SolveModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced)
     PrintToFileSummaryResults(num_Scenarios)
-    #SaveOpeningDecisions(num_Scenarios, batch)
+    SaveOpeningDecisions(num_Scenarios, batch)
