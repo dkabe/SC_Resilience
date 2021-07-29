@@ -117,11 +117,11 @@ dic_grbOut = {}
 
 grbModel = Model('stochasticResil')
 
-def InitializeModelParams(num_Scenarios):
+def InitializeModelParams(num_Scenarios, batch):
     global x_i
     global x_j
-    path = '/home/dkabe/Model_brainstorming/SAA_Analysis/'
-    f = open(path + str(num_Scenarios) + '_' + 'opening_decisions.txt', "r")
+    path = "/home/dkabe/Model_brainstorming/SAA_Analysis/Opening_Decisions/"
+    f = open(path + str(num_Scenarios) + "_scenarios/" + str(num_Scenarios) + "_" + str(batch) + "_opening_decisions" + ".txt", "r")
     text = f.read()
     f.close()
     solutions_str = text.split('\n')
@@ -429,17 +429,17 @@ def get_rl_rate(w, instance, num_Scenarios, Market, Products):
 
     return(rl_penalty)
 
-def PrintToFileSummaryResults(num_Scenarios):
-    results_file = "/home/dkabe/Model_brainstorming/SAA_Analysis/" + str(num_Scenarios) + "_UB_results" + ".txt"
+def PrintToFileSummaryResults(num_Scenarios, batch):
+    results_file = "/home/dkabe/Model_brainstorming/SAA_Analysis/Upper_Bounds/" + str(num_Scenarios) + "_scenarios/" + str(num_Scenarios) + "_" + str(batch) + "_UB_results" + ".txt"
     ff = open(results_file, "a")
     ff.write(str(Summary_dict['ObjVal']) + '\n')
     ff.close()
     return
 
 
-def run_Model(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, s1):
+def run_Model(s1, batch, instance=5, rl=0.5, num_Scenarios=50, Manufacturing_plants=6, Distribution=4, Market=29, Products=3, Outsourced=3, epsilon=700000):
     
-    InitializeModelParams(num_Scenarios)
+    InitializeModelParams(num_Scenarios, batch)
     SetGurobiModel(instance, rl, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, s1)
     SolveModel()
-    PrintToFileSummaryResults(num_Scenarios)
+    PrintToFileSummaryResults(num_Scenarios, batch)

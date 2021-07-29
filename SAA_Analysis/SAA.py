@@ -441,26 +441,25 @@ def get_rl_rate(w, instance, num_Scenarios, Market, Products):
     return(rl_penalty)
 
 def PrintToFileSummaryResults(num_Scenarios):
-    results_file = "/home/dkabe/Model_brainstorming/SAA_Analysis/" + str(num_Scenarios) + "_results" + ".txt"
+    results_file = "/home/dkabe/Model_brainstorming/SAA_Analysis/Objectives/" + str(num_Scenarios) + "_results" + ".txt"
     ff = open(results_file, "a")
     ff.write(str(Summary_dict['ObjVal']) + '\n')
     ff.close()
     return
 
 def SaveOpeningDecisions(num_Scenarios, batch):
-    results_file = "/home/dkabe/Model_brainstorming/SAA_Analysis/" + str(num_Scenarios) + "_opening_decisions" + ".txt"
-    if batch == 29:
-        ff = open(results_file, "a")
-        ff.write("x_i = " + str(v_val_x_i) + '\n')
-        ff.write("x_j = " + str(v_val_x_j))
-        ff.close()
+    results_file = "/home/dkabe/Model_brainstorming/SAA_Analysis/Opening_Decisions/" + str(num_Scenarios) + "_scenarios/" + str(num_Scenarios) + "_" + str(batch) + "_opening_decisions" + ".txt"
+    ff = open(results_file, "a")
+    ff.write(str(v_val_x_i) + '\n')
+    ff.write(str(v_val_x_j))
+    ff.close()
     return
 
 
-def run_Model(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, batch):
+def run_Model(batch, instance=5, rl=0.5, num_Scenarios=50, Manufacturing_plants=6, Distribution=4, Market=29, Products=3, Outsourced=3, epsilon=700000):
     
     InitializeModelParams(num_Scenarios, Market, Products, batch)
     SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon)
     SolveModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced)
     PrintToFileSummaryResults(num_Scenarios)
-    SaveOpeningDecisions(num_Scenarios, batch)
+    #SaveOpeningDecisions(num_Scenarios, batch)
