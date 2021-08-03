@@ -1,4 +1,4 @@
-from run_stochastic_objectives import *
+from individual_objectives import *
 import time
 instances = 6
 MPs = [2, 3, 4, 6, 6, 6]
@@ -6,8 +6,8 @@ DCs = [3, 4, 6, 8, 4, 4]
 MZs = [1, 2, 3, 5, 29, 29]
 numScenarios = [32, 128, 200, 200, 128, 200]
 epsilons = [200, 400, 600, 800, 1500000, 700000]
-rl = [0.95]
-dicts = [{'f1': 1, 'f2': 0, 'f3': 0, 'f4': 0}, {'f1': 0, 'f2': 1, 'f3': 0, 'f4': 0}, {'f1': 0, 'f2': 0, 'f3': 1, 'f4': 0}, {'f1': 0, 'f2': 0, 'f3': 0, 'f4': 1}]
+rl = [0.5, 0.75, 0.95]
+dicts = [{'f1': 1, 'f2': 0, 'f3': 0}, {'f1': 0, 'f2': 1, 'f3': 0}, {'f1': 0, 'f2': 0, 'f3': 1}]
 
 for instance in range(4,5):
     for r_level in rl:
