@@ -437,7 +437,7 @@ def PrintToFileSummaryResults(num_Scenarios, batch):
     return
 
 
-def run_Model(s1, batch, instance=5, rl=0.5, num_Scenarios=250, Manufacturing_plants=6, Distribution=4, Market=29, Products=3, Outsourced=3, epsilon=700000):
+def run_Model(s1, batch, instance=5, rl=0.5, num_Scenarios=350, Manufacturing_plants=6, Distribution=4, Market=29, Products=3, Outsourced=3, epsilon=700000):
     
     InitializeModelParams(num_Scenarios, batch)
     SetGurobiModel(instance, rl, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, s1)

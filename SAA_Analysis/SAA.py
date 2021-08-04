@@ -457,7 +457,7 @@ def SaveOpeningDecisions(num_Scenarios, batch):
     return
 
 
-def run_Model(batch, instance=5, rl=0.5, num_Scenarios=300, Manufacturing_plants=6, Distribution=4, Market=29, Products=3, Outsourced=3, epsilon=700000):
+def run_Model(batch, instance=5, rl=0.5, num_Scenarios=350, Manufacturing_plants=6, Distribution=4, Market=29, Products=3, Outsourced=3, epsilon=700000):
     
     InitializeModelParams(num_Scenarios, Market, Products, batch)
     SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon)
