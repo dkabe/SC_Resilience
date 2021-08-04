@@ -462,5 +462,5 @@ def run_Model(batch, instance=5, rl=0.5, num_Scenarios=350, Manufacturing_plants
     InitializeModelParams(num_Scenarios, Market, Products, batch)
     SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon)
     SolveModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced)
-    #PrintToFileSummaryResults(num_Scenarios)
+    PrintToFileSummaryResults(num_Scenarios)
     SaveOpeningDecisions(num_Scenarios, batch)
