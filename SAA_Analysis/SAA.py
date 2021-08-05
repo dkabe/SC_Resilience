@@ -11,20 +11,19 @@ import ast
 import os
 # Read input files
 #path = "C:/Users/Devika Kabe/Documents/Model_brainstorming/Input_Data/"
-path = "/home/dkabe/Model_brainstorming/Input_Data/"
+path = "/home/dkabe/Model_brainstorming/Input_Data/Realistic/"
 p_failure = 0.1
 p_running = 1 - p_failure
-instances = 6
+instances = 2
 num_samples = 200
-Products  = [2,2,2,2,3,3]
-Outsourced =[2,2,2,2,3,3]
-#Products = 2
-#Outsourced = 2
+Products  = [3,3]
+Outsourced =[3,3]
+
 levels = 2
 
-Manufacturing_plants = [2, 3, 4, 6, 6, 6]
-Distribution = [3, 4, 6, 8, 4, 4]
-Market = [1, 2, 3, 5, 29, 29]
+Manufacturing_plants = [6, 6]
+Distribution = [4, 4]
+Market = [29, 29]
 
 # Read and append input files
 f_i = [None]*instances
