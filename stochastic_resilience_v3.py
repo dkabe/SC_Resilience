@@ -11,9 +11,9 @@ import ast
 
 # Read input files
 #path = "C:/Users/Devika Kabe/Documents/Model_brainstorming/Input_Data/"
-path = "/home/dkabe/Model_brainstorming/Input_Data/"
+path = "/home/dkabe/Model_brainstorming/Input_Data/Realistic/"
 
-instances = 6
+instances = 2
 
 levels = 2
 

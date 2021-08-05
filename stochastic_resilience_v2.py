@@ -11,21 +11,20 @@ import ast
 
 # Read input files
 #path = "C:/Users/Devika Kabe/Documents/Model_brainstorming/Input_Data/"
-path = "/home/dkabe/Model_brainstorming/Input_Data/"
+path = "/home/dkabe/Model_brainstorming/Input_Data/Realistic/"
 p_failure = 0.1
 p_running = 1 - p_failure
-instances = 6
+instances = 2
 num_samples = 200
-Products  = [2,2,2,2,3,3]
-Outsourced =[2,2,2,2,3,3]
-#Products = 2
-#Outsourced = 2
+Products  = [3,3]
+Outsourced =[3,3]
+
 levels = 2
 
-Manufacturing_plants = [2, 3, 4, 6, 6, 6]
-Distribution = [3, 4, 6, 8, 4, 4]
-Market = [1, 2, 3, 5, 29, 29]
-numScenarios = [32, 128, 200, 200, 128, 200]
+Manufacturing_plants = [6, 6]
+Distribution = [4, 4]
+Market = [29, 29]
+numScenarios = [128, 200]
 
 # Read and append input files
 f_i = [None]*instances
@@ -128,61 +127,30 @@ grbModel = Model('stochasticResil')
 
 def SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon):
 
-    for i in range(Manufacturing_plants):
-        x_i[i] = grbModel.addVar(vtype = GRB.BINARY)
+    global x_i 
+    global x_j 
+    global U_km 
+    global V1_lm 
+    global V2_lm 
+    global Q_im 
+    global Y_ijm 
+    global Z_jkm 
+    global T_ljm 
+    global T_lkm 
+    global w_s 
 
-    for j in range(Distribution):
-        x_j[j] = grbModel.addVar(vtype = GRB.BINARY)
-
-    for s in range(num_Scenarios):
-        for k in range(Market):
-            for m in range(Products):
-                U_km[s,k,m] = grbModel.addVar(vtype = GRB.CONTINUOUS)
-
-    for s in range(num_Scenarios):
-        for m in range(Products):
-            for l in range(Outsourced):
-                V1_lm[s,m,l] = grbModel.addVar(vtype = GRB.CONTINUOUS)
-
-    for s in range(num_Scenarios):
-        for m in range(Products):
-            for l in range(Outsourced):
-                V2_lm[s,m,l] = grbModel.addVar(vtype = GRB.CONTINUOUS)
-
-    for s in range(num_Scenarios):
-        for m in range(Products):
-            for i in range(Manufacturing_plants):
-                Q_im[s,m,i] = grbModel.addVar(vtype = GRB.CONTINUOUS)
-
-    for s in range(num_Scenarios):
-        for m in range(Products):
-            for i in range(Manufacturing_plants):
-                for j in range(Distribution):
-                    Y_ijm[s,m,i,j] = grbModel.addVar(vtype = GRB.CONTINUOUS)
-
-    for s in range(num_Scenarios):
-        for m in range(Products):
-            for j in range(Distribution):
-                for k in range(Market):
-                    Z_jkm[s,m,j,k] = grbModel.addVar(vtype = GRB.CONTINUOUS)
-
-    for s in range(num_Scenarios):
-        for m in range(Products):
-            for l in range(Outsourced):
-                for j in range(Distribution):
-                    T_ljm[s,m,l,j] = grbModel.addVar(vtype = GRB.CONTINUOUS)
-
-    for s in range(num_Scenarios):
-        for m in range(Products):
-            for l in range(Outsourced):
-                for k in range(Market):
-                    T_lkm[s,m,l,k] = grbModel.addVar(vtype = GRB.CONTINUOUS)
-
-    for s in range(num_Scenarios):
-        for k in range(Market):
-            for m in range(Products):
-                w_s[s,k,m] = grbModel.addVar(vtype = GRB.CONTINUOUS)
-
+    x_i = grbModel.addVars(range(Manufacturing_plants), vtype = GRB.BINARY)
+    x_j = grbModel.addVars(range(Distribution), vtype = GRB.BINARY)              
+    U_km = grbModel.addVars(range(num_Scenarios), range(Market), range(Products), vtype = GRB.CONTINUOUS)    
+    V1_lm = grbModel.addVars(range(num_Scenarios), range(Products), range(Outsourced), vtype = GRB.CONTINUOUS)
+    V2_lm = grbModel.addVars(range(num_Scenarios), range(Products), range(Outsourced), vtype = GRB.CONTINUOUS)
+    Q_im = grbModel.addVars(range(num_Scenarios), range(Products), range(Manufacturing_plants), vtype = GRB.CONTINUOUS)
+    Y_ijm = grbModel.addVars(range(num_Scenarios), range(Products), range(Manufacturing_plants), range(Distribution), vtype = GRB.CONTINUOUS)
+    Z_jkm = grbModel.addVars(range(num_Scenarios), range(Products), range(Distribution), range(Market), vtype = GRB.CONTINUOUS)
+    T_ljm = grbModel.addVars(range(num_Scenarios), range(Products), range(Outsourced), range(Distribution), vtype = GRB.CONTINUOUS)
+    T_lkm = grbModel.addVars(range(num_Scenarios), range(Products), range(Outsourced), range(Market), vtype = GRB.CONTINUOUS)
+    w_s = grbModel.addVars(range(num_Scenarios), range(Market), range(Products), vtype = GRB.CONTINUOUS)
+    
     SetGrb_Obj(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced)
     ModelCons(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon)
 
