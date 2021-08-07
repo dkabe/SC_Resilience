@@ -11,20 +11,20 @@ import ast
 
 # Read input files
 #path = "C:/Users/Devika Kabe/Documents/Model_brainstorming/Input_Data/"
-path = "/home/dkabe/Model_brainstorming/Input_Data/"
+path = "/home/dkabe/Model_brainstorming/Input_Data/Realistic/"
 p_failure = 0.1
 p_running = 1 - p_failure
-instances = 6
+instances = 2
 num_samples = 200
-Products  = [2,2,2,2,3,3]
-Outsourced =[2,2,2,2,3,3]
+Products  = [3,3]
+Outsourced =[3,3]
 #Products = 2
 #Outsourced = 2
 levels = 2
 
-Manufacturing_plants = [2, 3, 4, 6, 6, 6]
-Distribution = [3, 4, 6, 8, 4, 4]
-Market = [1, 2, 3, 5, 29, 29]
+Manufacturing_plants = [6, 6]
+Distribution = [4, 4]
+Market = [29, 29]
 
 # Read and append input files
 f_i = [None]*instances
@@ -133,45 +133,26 @@ def InitializeModelParams(num_Scenarios, batch):
 
 def SetGurobiModel(instance, rl, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, s1):
     
-    for k in range(Market):
-        for m in range(Products):
-            U_km[k,m] = grbModel.addVar(vtype = GRB.CONTINUOUS)
+    global U_km 
+    global V1_lm 
+    global V2_lm 
+    global Q_im 
+    global Y_ijm 
+    global Z_jkm 
+    global T_ljm 
+    global T_lkm 
+    global w_s 
 
-    for m in range(Products):
-        for l in range(Outsourced):
-            V1_lm[m,l] = grbModel.addVar(vtype = GRB.CONTINUOUS)
-
-    for m in range(Products):
-        for l in range(Outsourced):
-            V2_lm[m,l] = grbModel.addVar(vtype = GRB.CONTINUOUS)
-
-    for m in range(Products):
-        for i in range(Manufacturing_plants):
-            Q_im[m,i] = grbModel.addVar(vtype = GRB.CONTINUOUS)
-
-    for m in range(Products):
-        for i in range(Manufacturing_plants):
-            for j in range(Distribution):
-                Y_ijm[m,i,j] = grbModel.addVar(vtype = GRB.CONTINUOUS)
-
-    for m in range(Products):
-        for j in range(Distribution):
-            for k in range(Market):
-                Z_jkm[m,j,k] = grbModel.addVar(vtype = GRB.CONTINUOUS)
-
-    for m in range(Products):
-        for l in range(Outsourced):
-            for j in range(Distribution):
-                T_ljm[m,l,j] = grbModel.addVar(vtype = GRB.CONTINUOUS)
-
-    for m in range(Products):
-        for l in range(Outsourced):
-            for k in range(Market):
-                T_lkm[m,l,k] = grbModel.addVar(vtype = GRB.CONTINUOUS)
-
-    for k in range(Market):
-        for m in range(Products):
-            w_s[k,m] = grbModel.addVar(vtype = GRB.CONTINUOUS)
+    U_km = grbModel.addVars(range(Market), range(Products), vtype = GRB.CONTINUOUS)    
+    V1_lm = grbModel.addVars(range(Products), range(Outsourced), vtype = GRB.CONTINUOUS)
+    V2_lm = grbModel.addVars(range(Products), range(Outsourced), vtype = GRB.CONTINUOUS)
+    Q_im = grbModel.addVars(range(Products), range(Manufacturing_plants), vtype = GRB.CONTINUOUS)
+    Y_ijm = grbModel.addVars(range(Products), range(Manufacturing_plants), range(Distribution), vtype = GRB.CONTINUOUS)
+    Z_jkm = grbModel.addVars(range(Products), range(Distribution), range(Market), vtype = GRB.CONTINUOUS)
+    T_ljm = grbModel.addVars(range(Products), range(Outsourced), range(Distribution), vtype = GRB.CONTINUOUS)
+    T_lkm = grbModel.addVars(range(Products), range(Outsourced), range(Market), vtype = GRB.CONTINUOUS)
+    w_s = grbModel.addVars(range(Market), range(Products), vtype = GRB.CONTINUOUS)
+    
 
     SetGrb_Obj(instance, Manufacturing_plants, Distribution, Market, Products, Outsourced, s1)
     ModelCons(instance, rl, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, s1)
@@ -437,7 +418,7 @@ def PrintToFileSummaryResults(num_Scenarios, batch):
     return
 
 
-def run_Model(s1, batch, instance=5, rl=0.5, num_Scenarios=350, Manufacturing_plants=6, Distribution=4, Market=29, Products=3, Outsourced=3, epsilon=700000):
+def run_Model(s1, batch, instance=1, rl=0.5, num_Scenarios=350, Manufacturing_plants=6, Distribution=4, Market=29, Products=3, Outsourced=3, epsilon=700000):
     
     InitializeModelParams(num_Scenarios, batch)
     SetGurobiModel(instance, rl, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, s1)

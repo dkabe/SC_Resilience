@@ -11,20 +11,19 @@ import ast
 
 # Read input files
 #path = "C:/Users/Devika Kabe/Documents/Model_brainstorming/Input_Data/"
-path = "/home/dkabe/Model_brainstorming/Input_Data/"
+path = "/home/dkabe/Model_brainstorming/Input_Data/Realistic/"
 p_failure = 0.1
 p_running = 1 - p_failure
-instances = 6
+instances = 2
 num_samples = 200
-Products  = [2,2,2,2,3,3]
-Outsourced =[2,2,2,2,3,3]
-#Products = 2
-#Outsourced = 2
+Products  = [3,3]
+Outsourced =[3,3]
+
 levels = 2
 
-Manufacturing_plants = [2, 3, 4, 6, 6, 6]
-Distribution = [3, 4, 6, 8, 4, 4]
-Market = [1, 2, 3, 5, 29, 29]
+Manufacturing_plants = [6, 6]
+Distribution = [4, 4]
+Market = [29, 29]
 
 # Read and append input files
 f_i = [None]*instances
@@ -72,12 +71,16 @@ for instance in range(instances):
     Supplier_cost[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/SupplierCost_' + str(instance + 1) + '.txt').reshape((levels, Products[instance], Outsourced[instance]))
 
 
-Scenarios = []
-demand = np.loadtxt("/home/dkabe/Model_brainstorming/SAA_Analysis/eval_set_demand.txt").reshape((1024,3,29))
-
-text_file = open("/home/dkabe/Model_brainstorming/SAA_Analysis/Evaluation_Set.txt", "r")
-ls = text_file.read().split('\n')[:-1]
-Scenarios = list(map(lambda x: ast.literal_eval(x), ls))
+Scenarios = {}
+demand = {}
+Scenario_size = [50, 100, 150, 200, 250, 300, 350]
+for num_Scenarios in Scenario_size:
+    text_file = open('/home/dkabe/Model_brainstorming/SAA_Analysis/Eval_Sets/' + str(num_Scenarios) + '_scenarios/' + 'evaluation_scenarios.txt', "r")
+    ls = text_file.read().split('\n')[:-1]
+    scen = list(map(lambda x: ast.literal_eval(x), ls))
+    Scenarios[str(num_Scenarios)] = scen
+    demand[str(num_Scenarios)] = np.loadtxt('/home/dkabe/Model_brainstorming/SAA_Analysis/Eval_Sets/' + str(num_Scenarios) + '_scenarios/' + 'demand.txt').reshape((5000,3,29))
+    
 # Initialize model variables
 
 x_i = {} # opening manufacturing plant
@@ -120,6 +123,8 @@ grbModel = Model('stochasticResil')
 def InitializeModelParams(num_Scenarios, batch):
     global x_i
     global x_j
+    #global demand
+    #global Scenarios 
     path = "/home/dkabe/Model_brainstorming/SAA_Analysis/Opening_Decisions/"
     f = open(path + str(num_Scenarios) + "_scenarios/" + str(num_Scenarios) + "_" + str(batch) + "_opening_decisions" + ".txt", "r")
     text = f.read()
@@ -128,53 +133,38 @@ def InitializeModelParams(num_Scenarios, batch):
     x_i = ast.literal_eval(solutions_str[0])
     x_j = ast.literal_eval(solutions_str[1])
 
+    #demand = np.loadtxt('/home/dkabe/Model_brainstorming/SAA_Analysis/Eval_Sets/' + str(num_Scenarios) + '_scenarios/' + 'demand.txt').reshape((5000,3,29))
+    #text_file = open('/home/dkabe/Model_brainstorming/SAA_Analysis/Eval_Sets/' + str(num_Scenarios) + '_scenarios/' + 'evaluation_scenarios.txt', "r")
+    #ls = text_file.read().split('\n')[:-1]
+    #Scenarios = list(map(lambda x: ast.literal_eval(x), ls))
+
     return 
 
 
-def SetGurobiModel(instance, rl, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, s1):
+def SetGurobiModel(instance, num_Scenarios, rl, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, s1):
     
-    for k in range(Market):
-        for m in range(Products):
-            U_km[k,m] = grbModel.addVar(vtype = GRB.CONTINUOUS)
+    global U_km 
+    global V1_lm 
+    global V2_lm 
+    global Q_im 
+    global Y_ijm 
+    global Z_jkm 
+    global T_ljm 
+    global T_lkm 
+    global w_s 
+         
+    U_km = grbModel.addVars(range(Market), range(Products), vtype = GRB.CONTINUOUS)    
+    V1_lm = grbModel.addVars(range(Products), range(Outsourced), vtype = GRB.CONTINUOUS)
+    V2_lm = grbModel.addVars(range(Products), range(Outsourced), vtype = GRB.CONTINUOUS)
+    Q_im = grbModel.addVars(range(Products), range(Manufacturing_plants), vtype = GRB.CONTINUOUS)
+    Y_ijm = grbModel.addVars(range(Products), range(Manufacturing_plants), range(Distribution), vtype = GRB.CONTINUOUS)
+    Z_jkm = grbModel.addVars(range(Products), range(Distribution), range(Market), vtype = GRB.CONTINUOUS)
+    T_ljm = grbModel.addVars(range(Products), range(Outsourced), range(Distribution), vtype = GRB.CONTINUOUS)
+    T_lkm = grbModel.addVars(range(Products), range(Outsourced), range(Market), vtype = GRB.CONTINUOUS)
+    w_s = grbModel.addVars(range(Market), range(Products), vtype = GRB.CONTINUOUS)
 
-    for m in range(Products):
-        for l in range(Outsourced):
-            V1_lm[m,l] = grbModel.addVar(vtype = GRB.CONTINUOUS)
-
-    for m in range(Products):
-        for l in range(Outsourced):
-            V2_lm[m,l] = grbModel.addVar(vtype = GRB.CONTINUOUS)
-
-    for m in range(Products):
-        for i in range(Manufacturing_plants):
-            Q_im[m,i] = grbModel.addVar(vtype = GRB.CONTINUOUS)
-
-    for m in range(Products):
-        for i in range(Manufacturing_plants):
-            for j in range(Distribution):
-                Y_ijm[m,i,j] = grbModel.addVar(vtype = GRB.CONTINUOUS)
-
-    for m in range(Products):
-        for j in range(Distribution):
-            for k in range(Market):
-                Z_jkm[m,j,k] = grbModel.addVar(vtype = GRB.CONTINUOUS)
-
-    for m in range(Products):
-        for l in range(Outsourced):
-            for j in range(Distribution):
-                T_ljm[m,l,j] = grbModel.addVar(vtype = GRB.CONTINUOUS)
-
-    for m in range(Products):
-        for l in range(Outsourced):
-            for k in range(Market):
-                T_lkm[m,l,k] = grbModel.addVar(vtype = GRB.CONTINUOUS)
-
-    for k in range(Market):
-        for m in range(Products):
-            w_s[k,m] = grbModel.addVar(vtype = GRB.CONTINUOUS)
-
-    SetGrb_Obj(instance, Manufacturing_plants, Distribution, Market, Products, Outsourced, s1)
-    ModelCons(instance, rl, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, s1)
+    SetGrb_Obj(instance, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, s1)
+    ModelCons(instance, num_Scenarios, rl, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, s1)
 
 def SolveModel():
     
@@ -190,7 +180,7 @@ def SolveModel():
 
 # Objective
 
-def SetGrb_Obj(instance, Manufacturing_plants, Distribution, Market, Products, Outsourced, s1):
+def SetGrb_Obj(instance, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, s1):
 
     grb_expr = LinExpr()
 
@@ -264,7 +254,7 @@ def SetGrb_Obj(instance, Manufacturing_plants, Distribution, Market, Products, O
     rl_penalty = 0
     for k in range(Market):
         for m in range(Products):
-            rl_penalty += lost_sales[instance][k][m]*w_s[k,m]*demand[s1][m][k]
+            rl_penalty += lost_sales[instance][k][m]*w_s[k,m]*demand[str(num_Scenarios)][s1][m][k]
 
     grb_expr += OC_1 + OC_2 + (total_shipment + total_pr_cost + total_b_cost + total_l_cost + rl_penalty)
 
@@ -274,7 +264,7 @@ def SetGrb_Obj(instance, Manufacturing_plants, Distribution, Market, Products, O
 
     # Model Constraints
 
-def ModelCons(instance, rl, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, s1):
+def ModelCons(instance, num_Scenarios, rl, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, s1):
 
     # Network Flow
 
@@ -286,7 +276,7 @@ def ModelCons(instance, rl, Manufacturing_plants, Distribution, Market, Products
                         for j in range(Distribution) for m in range(Products))
 
     grbModel.addConstrs((quicksum(Z_jkm[m,j,k] for j in range(Distribution)) +
-                         quicksum(T_lkm[m,l,k] for l in range(Outsourced)) + U_km[k,m]) >= demand[s1][m][k]
+                         quicksum(T_lkm[m,l,k] for l in range(Outsourced)) + U_km[k,m]) >= demand[str(num_Scenarios)][s1][m][k]
                          for k in range(Market) for m in range(Products))
 
 
@@ -296,12 +286,12 @@ def ModelCons(instance, rl, Manufacturing_plants, Distribution, Market, Products
                         for m in range(Products) for l in range(Outsourced))
 
     # Capacity Constraints
-    grbModel.addConstrs(quicksum(volume[instance][m]*Q_im[m,i] for m in range(Products)) <= Scenarios[s1][0][i]*Capacities_i[instance][i]*x_i[i]
+    grbModel.addConstrs(quicksum(volume[instance][m]*Q_im[m,i] for m in range(Products)) <= Scenarios[str(num_Scenarios)][s1][0][i]*Capacities_i[instance][i]*x_i[i]
                          for i in range(Manufacturing_plants))
 
     grbModel.addConstrs(quicksum(volume[instance][m]*Y_ijm[m,i,j] for i in range(Manufacturing_plants) for m in range(Products)) +
                         quicksum(volume[instance][m]*T_ljm[m,l,j] for l in range(Outsourced) for m in range(Products)) <=
-                        Scenarios[s1][1][j]*Capacities_j[instance][j]*x_j[j]
+                        Scenarios[str(num_Scenarios)][s1][1][j]*Capacities_j[instance][j]*x_j[j]
                         for j in range(Distribution))
 
     grbModel.addConstrs((V1_lm[m,l] + V2_lm[m,l] <= (Capacities_l[instance][m][l]))
@@ -314,7 +304,7 @@ def ModelCons(instance, rl, Manufacturing_plants, Distribution, Market, Products
 
     
     # Resilience Metric 
-    grbModel.addConstrs(w_s[k,m] >= rl - (1 - U_km[k,m]/demand[s1][m][k]) for k in range(Market) for m in range(Products))
+    grbModel.addConstrs(w_s[k,m] >= rl - (1 - U_km[k,m]/demand[str(num_Scenarios)][s1][m][k]) for k in range(Market) for m in range(Products))
 
     # Enforcing opening decisions 
 
@@ -425,21 +415,21 @@ def get_rl_rate(w, instance, num_Scenarios, Market, Products):
     for s in range(num_Scenarios):
         for k in range(Market):
             for m in range(Products):
-                rl_penalty += lost_sales[instance][k][m]*w[s,k,m]*demand[s][m][k]
+                rl_penalty += lost_sales[instance][k][m]*w[s,k,m]*demand[str(num_Scenarios)][s][m][k]
 
     return(rl_penalty)
 
 def PrintToFileSummaryResults(num_Scenarios, batch):
-    results_file = "/home/dkabe/Model_brainstorming/SAA_Analysis/Upper_Bounds/" + str(num_Scenarios) + "_scenarios/" + str(num_Scenarios) + "_" + str(batch) + "_UB_results" + ".txt"
+    results_file = "/home/dkabe/Model_brainstorming/SAA_Analysis/Upper_Bounds_v2/" + str(num_Scenarios) + "_scenarios/" + str(num_Scenarios) + "_" + str(batch) + "_UB_results" + ".txt"
     ff = open(results_file, "a")
     ff.write(str(Summary_dict['ObjVal']) + '\n')
     ff.close()
     return
 
 
-def run_Model(s1, batch, instance=5, rl=0.5, num_Scenarios=350, Manufacturing_plants=6, Distribution=4, Market=29, Products=3, Outsourced=3, epsilon=700000):
+def run_Model(s1, batch, num_Scenarios, instance=1, rl=0.5, Manufacturing_plants=6, Distribution=4, Market=29, Products=3, Outsourced=3, epsilon=700000):
     
     InitializeModelParams(num_Scenarios, batch)
-    SetGurobiModel(instance, rl, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, s1)
+    SetGurobiModel(instance, num_Scenarios, rl, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, s1)
     SolveModel()
     PrintToFileSummaryResults(num_Scenarios, batch)

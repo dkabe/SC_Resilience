@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --account=def-wahab
-#SBATCH --time=0-00:20        # time limit (D-HH:MM)
+#SBATCH --time=0-04:00        # time limit (D-HH:MM)
 #SBATCH --cpus-per-task=30     # number of CPUs (threads) to use
 #SBATCH --mem-per-cpu=1000M   # memory per CPU (in MB)
 module load nixpkgs/16.09

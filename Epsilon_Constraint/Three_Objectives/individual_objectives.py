@@ -106,7 +106,6 @@ Z_jkm = {} # shipping j -> k
 T_ljm = {} # shipping l -> j
 T_lkm = {} # shipping l -> k
 w_s = {} # penalty for not meeting demand above specified rate
-v_s = {}
 
 # variable values
 v_val_x_i = {}
@@ -146,7 +145,6 @@ def SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distributi
     global T_ljm 
     global T_lkm 
     global w_s
-    global v_s 
 
     x_i = grbModel.addVars(range(Manufacturing_plants), vtype = GRB.BINARY)
     x_j = grbModel.addVars(range(Distribution), vtype = GRB.BINARY)              
@@ -159,7 +157,6 @@ def SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distributi
     T_ljm = grbModel.addVars(range(num_Scenarios), range(Products), range(Outsourced), range(Distribution), vtype = GRB.CONTINUOUS)
     T_lkm = grbModel.addVars(range(num_Scenarios), range(Products), range(Outsourced), range(Market), vtype = GRB.CONTINUOUS)
     w_s = grbModel.addVars(range(num_Scenarios), range(Market), range(Products), vtype = GRB.CONTINUOUS)
-    v_s = grbModel.addVars(range(num_Scenarios), range(Market), range(Products), vtype = GRB.CONTINUOUS, lb = float('-inf'))
 
 
     SetGrb_Obj(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced)
@@ -356,9 +353,8 @@ def ModelCons(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, M
 
 
     # Resilience Metric (w = % of rl being missed)
-    grbModel.addConstrs(v_s[s,k,m] == rl - (1 - U_km[s,k,m]/demand[instance][s][m][k]) for s in range(num_Scenarios) for k in range(Market) for m in range(Products))
+    grbModel.addConstrs(w_s[s,k,m] >= rl - (1 - U_km[s,k,m]/demand[instance][s][m][k]) for s in range(num_Scenarios) for k in range(Market) for m in range(Products))
 
-    grbModel.addConstrs(w_s[s,k,m] == max_([0, v_s[s,k,m]]) for s in range(num_Scenarios) for k in range(Market) for m in range(Products))
 
 
     return
