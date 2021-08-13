@@ -114,10 +114,20 @@ objWeights = {}
 dic_grbOut = {}
 
 
+def InitializeModelParams(instance, s1, rl):
+    global x_i
+    global x_j
+    path = '/home/dkabe/Model_brainstorming/EVSS/First_Stage_Decisions/'
+    f = open(path + "Instance_" + str(instance + 1) + "/first_stage_" + str(s1) + "_" + str(rl) + ".txt", "r")
+    text = f.read()
+    f.close()
+    solutions_str = text.split('\n')
+    x_i = ast.literal_eval(solutions_str[0])
+    x_j = ast.literal_eval(solutions_str[1])
+    return
+
 def SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, s1):
 
-    global x_i 
-    global x_j 
     global U_km 
     global V1_lm 
     global V2_lm 
@@ -128,8 +138,7 @@ def SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distributi
     global T_lkm 
     global w_s 
 
-    x_i = grbModel.addVars(range(Manufacturing_plants), vtype = GRB.BINARY)
-    x_j = grbModel.addVars(range(Distribution), vtype = GRB.BINARY)              
+ 
     U_km = grbModel.addVars(range(num_Scenarios), range(Market), range(Products), vtype = GRB.CONTINUOUS)    
     V1_lm = grbModel.addVars(range(num_Scenarios), range(Products), range(Outsourced), vtype = GRB.CONTINUOUS)
     V2_lm = grbModel.addVars(range(num_Scenarios), range(Products), range(Outsourced), vtype = GRB.CONTINUOUS)
@@ -144,11 +153,11 @@ def SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distributi
     SetGrb_Obj(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, s1)
     ModelCons(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, s1)
 
-def SolveModel():
+def SolveModel(s1, instance):
     grbModel.params.OutputFlag = 0
     grbModel.optimize()
 
-    Summary_dict['obj'] = grbModel.objval
+    Summary_dict['obj'] = Probabilities[instance][s1]*grbModel.objval
 
     return
 
@@ -230,7 +239,7 @@ def SetGrb_Obj(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, 
             for m in range(Products):
                 rl_penalty += Probabilities[instance][s]*lost_sales[instance][k][m]*w_s[s,k,m]*demand[instance][s][m][k]
 
-    grb_expr += OC_1 + OC_2 + (total_shipment + total_pr_cost + total_b_cost + total_l_cost + rl_penalty)
+    grb_expr += (OC_1 + OC_2 + (total_shipment + total_pr_cost + total_b_cost + total_l_cost + rl_penalty))
 
     grbModel.setObjective(grb_expr, GRB.MINIMIZE)
 
@@ -281,19 +290,7 @@ def ModelCons(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, M
 
     grbModel.addConstrs(w_s[s,k,m] >= rl - (1 - U_km[s,k,m]/demand[instance][s][m][k]) for s in range(num_Scenarios) for k in range(Market) for m in range(Products))
 
-
-    # constraint to fix opening decisions
-
-    path = '/home/dkabe/Model_brainstorming/EVSS/First_Stage_Decisions/'
-    f = open(path + "Instance_" + str(instance + 1) + "/first_stage_" + str(s1) + "_" + str(rl) + ".txt", "r")
-    text = f.read()
-    f.close()
-    solutions_str = text.split('\n')
-    v_val_x_i = ast.literal_eval(solutions_str[0])
-    v_val_x_j = ast.literal_eval(solutions_str[1])
-
-    grbModel.addConstrs(x_i[i] == v_val_x_i[i] for i in range(Manufacturing_plants))
-    grbModel.addConstrs(x_j[j] == v_val_x_j[j] for j in range(Distribution))
+    
 
     return
 
@@ -305,8 +302,8 @@ def save_results(instance, rl):
 
     return
 
-def run_Model(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, s1):
-
+def run_Model(s1, instance=0, rl=0.75, num_Scenarios=128, Manufacturing_plants=6, Distribution=4, Market=29, Products=3, Outsourced=3, epsilon=1500000):
+    InitializeModelParams(instance, s1, rl)
     SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, s1)
-    SolveModel()
+    SolveModel(s1, instance)
     save_results(instance, rl)
