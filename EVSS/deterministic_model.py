@@ -22,7 +22,7 @@ levels = 2
 Manufacturing_plants = [6, 6]
 Distribution = [4, 4]
 Market = [29, 29]
-numScenarios = [128, 200]
+numScenarios = [128, 300]
 
 # Read and append input files
 f_i = [None]*instances
@@ -336,6 +336,6 @@ def run_Model_det(instance, rl, Manufacturing_plants, Distribution, Market, Prod
 
     SetGurobiModel_det(instance, rl, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, s1)
     SolveModel_det()
-    #save_FirstStageDecisions(instance, s1, rl) 
+    save_FirstStageDecisions(instance, s1, rl) 
     save_objectives(instance, rl)
 

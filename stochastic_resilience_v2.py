@@ -15,7 +15,6 @@ path = "/home/dkabe/Model_brainstorming/Input_Data/Realistic/"
 p_failure = 0.1
 p_running = 1 - p_failure
 instances = 2
-num_samples = 200
 Products  = [3,3]
 Outsourced =[3,3]
 
@@ -24,7 +23,7 @@ levels = 2
 Manufacturing_plants = [6, 6]
 Distribution = [4, 4]
 Market = [29, 29]
-numScenarios = [128, 200]
+numScenarios = [128, 300]
 
 # Read and append input files
 f_i = [None]*instances
@@ -465,6 +464,8 @@ def get_rl_rate(w, instance, num_Scenarios, Market, Products):
 def save_v_values(instance, rl, save_results):
     values = ["v_val_x_i", "v_val_x_j", "v_val_U_km", "v_val_V1_lm", "v_val_V2_lm", "v_val_Q_im", "v_val_Y_ijm", "v_val_Z_jkm", "v_val_T_ljm", "v_val_T_lkm", "v_val_w"]
     v_values = [v_val_x_i, v_val_x_j, v_val_U_km, v_val_V1_lm, v_val_V2_lm, v_val_Q_im, v_val_Y_ijm, v_val_Z_jkm, v_val_T_ljm, v_val_T_lkm, v_val_w]
+    if rl in [0.5, 0.75, 0.95]:
+        save_results = 1
     if save_results:
         ff = open("/home/dkabe/Model_brainstorming/Output/Variable_vals/" + "Instance_" + str(instance + 1) +  "/variable_vals_" + str(rl) + ".txt", "w+")
         for i in range(len(v_values)):
@@ -475,9 +476,10 @@ def save_v_values(instance, rl, save_results):
         ff.close()
     return
 
-def PrintToFileSummaryResults():
+def PrintToFileSummaryResults(rl):
     results_file = "/home/dkabe/Model_brainstorming/Output/results.txt"
     ff = open(results_file, "a")
+    ff.write(str(rl) + '\t')
     ff.write(str(Summary_dict['ObjVal']) + '\t' + str(Cost_dict['f1']) + '\t' + str(Cost_dict['f2']) + '\t' + str(Cost_dict['f3']) + '\t' + str(Cost_dict['f4']) + '\t')
     ff.write(str(Summary_dict['Demand_met']) + '\t' + str(Summary_dict['Demand_outsourced']) + '\t')
     ff.write(str(Summary_dict['OpenMPs']) + '\t' + str(Summary_dict['OpenDCs']) + '\t')
@@ -487,11 +489,11 @@ def PrintToFileSummaryResults():
     return
 
 
-def run_Model(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, objDict, save_results):
+def run_Model(rl, instance=1, num_Scenarios=300, Manufacturing_plants=6, Distribution=4, Market=29, Products=3, Outsourced=3, epsilon=700000, objDict={'f1': 1, 'f2': 1}, save_results=0):
     for key, value in objDict.items():
         objWeights[key] = value
 
     SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon)
     SolveModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced)
-    #PrintToFileSummaryResults()
+    PrintToFileSummaryResults(rl)
     save_v_values(instance, rl, save_results)

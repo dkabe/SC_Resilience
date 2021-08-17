@@ -22,7 +22,7 @@ Products  = [3,3]
 Manufacturing_plants = [6, 6]
 Distribution = [4, 4]
 Market = [29, 29]
-numScenarios = [128, 200]
+numScenarios = [128, 300]
 
 # Read and append input files
 f_i = [None]*instances
@@ -324,9 +324,10 @@ def get_rl_rate(w, instance, num_Scenarios, Market, Products):
 
     return(rl_penalty)
 
-def PrintToFileSummaryResults():
+def PrintToFileSummaryResults(rl):
     results_file = "/home/dkabe/Model_brainstorming/Output/results2.txt"
     ff = open(results_file, "a")
+    ff.write(str(rl) + '\t')
     ff.write(str(Summary_dict['ObjVal']) + '\t' + str(Cost_dict['f1']) + '\t' + str(Cost_dict['f3']) + '\t' + str(Cost_dict['f4']) + '\t')
     ff.write(str(Summary_dict['Demand_met']) + '\t')
     ff.write(str(Summary_dict['OpenMPs']) + '\t' + str(Summary_dict['OpenDCs']) + '\t')
@@ -336,10 +337,10 @@ def PrintToFileSummaryResults():
     return
 
 
-def run_Model(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, objDict):
+def run_Model(rl, instance=1, num_Scenarios=300, Manufacturing_plants=6, Distribution=4, Market=29, Products=3, objDict={'f1': 1, 'f2': 1}):
     for key, value in objDict.items():
         objWeights[key] = value
 
     SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products)
     SolveModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products)
-    PrintToFileSummaryResults()
+    PrintToFileSummaryResults(rl)

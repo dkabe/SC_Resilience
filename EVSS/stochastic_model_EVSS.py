@@ -13,7 +13,6 @@ path = "/home/dkabe/Model_brainstorming/Input_Data/Realistic/"
 p_failure = 0.1
 p_running = 1 - p_failure
 instances = 2
-num_samples = 200
 Products  = [3,3]
 Outsourced =[3,3]
 
@@ -22,7 +21,7 @@ levels = 2
 Manufacturing_plants = [6, 6]
 Distribution = [4, 4]
 Market = [29, 29]
-numScenarios = [128, 200]
+numScenarios = [128, 300]
 
 # Read and append input files
 f_i = [None]*instances
@@ -302,7 +301,7 @@ def save_results(instance, rl):
 
     return
 
-def run_Model(s1, instance=0, rl=0.75, num_Scenarios=128, Manufacturing_plants=6, Distribution=4, Market=29, Products=3, Outsourced=3, epsilon=1500000):
+def run_Model(s1, instance=1, rl=0.95, num_Scenarios=300, Manufacturing_plants=6, Distribution=4, Market=29, Products=3, Outsourced=3, epsilon=700000):
     InitializeModelParams(instance, s1, rl)
     SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, s1)
     SolveModel(s1, instance)
