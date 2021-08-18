@@ -156,7 +156,6 @@ def SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distributi
 def SolveModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced):
     grbModel.params.OutputFlag = 0
     grbModel.params.timelimit = 900
-    start_time = time.time()
     grbModel.optimize()
     #gap = grbModel.MIPGAP
     # get variable values
@@ -217,9 +216,7 @@ def SolveModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, 
     Cost_dict["f3"] = np.round(f3_cost, 2) # lost sales
     Summary_dict['Demand_met'] = np.sum([Probabilities[instance][s]*(Summary_dict["Purchasing_" + str(s)] + Summary_dict["Production_" + str(s)])/np.sum(demand[instance][s]) for s in range(num_Scenarios)])
     Summary_dict['Demand_outsourced'] = np.sum([Probabilities[instance][s]*Summary_dict["Purchasing_" + str(s)]/np.sum(demand[instance][s]) for s in range(num_Scenarios)])
-    end_time = time.time()
 
-    Summary_dict['CPU'] = end_time - start_time 
     
     return
 
@@ -492,8 +489,10 @@ def PrintToFileSummaryResults(rl):
 def run_Model(rl, instance=1, num_Scenarios=300, Manufacturing_plants=6, Distribution=4, Market=29, Products=3, Outsourced=3, epsilon=700000, objDict={'f1': 1, 'f2': 1}, save_results=0):
     for key, value in objDict.items():
         objWeights[key] = value
-
+    start_time = time.time()
     SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon)
     SolveModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced)
+    end_time = time.time()
+    Summary_dict['CPU'] = end_time - start_time
     PrintToFileSummaryResults(rl)
     save_v_values(instance, rl, save_results)

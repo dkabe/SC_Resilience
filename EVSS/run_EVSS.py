@@ -10,5 +10,5 @@ epsilons = [1500000, 700000]
 rl = [0.5]
 
 
-with mp.Pool(40) as pool:
-   pool.map(run_Model, [s for s in range(150)])
+with mp.Pool(30) as pool:
+   pool.map(run_Model, [s for s in range(240,300)], chunksize = 2)
