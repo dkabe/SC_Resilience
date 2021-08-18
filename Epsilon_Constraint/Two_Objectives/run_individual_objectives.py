@@ -4,12 +4,12 @@ instances = 2
 MPs = [6, 6]
 DCs = [4, 4]
 MZs = [29, 29]
-numScenarios = [128, 200]
+numScenarios = [128, 300]
 epsilons = [1500000, 700000]
-rl = [0.5, 0.75, 0.95]
+rl = [0.5]#, 0.75, 0.95]
 dicts = [{'f1': 1, 'f2': 0}, {'f1': 0, 'f2': 1}]
 
-for instance in range(1):
+for instance in range(1,2):
     for r_level in rl:
         for dct in dicts:
             start_time = time.time()

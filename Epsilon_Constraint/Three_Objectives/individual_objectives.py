@@ -26,7 +26,7 @@ levels = 2
 Manufacturing_plants = [6, 6]
 Distribution = [4, 4]
 Market = [29, 29]
-numScenarios = [128, 200]
+numScenarios = [128, 300]
 
 # Read and append input files
 f_i = [None]*instances
@@ -476,7 +476,7 @@ def PrintToFileSummaryResults(instance, rl):
     ff.close()
     return
 
-def run_Model(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, objDict):
+def run_Model(objDict, instance=1, rl=0.5, num_Scenarios=300, Manufacturing_plants=6, Distribution=4, Market=29, Products=3, Outsourced=3, epsilon=700000):
     for key, value in objDict.items():
         objWeights[key] = value
 

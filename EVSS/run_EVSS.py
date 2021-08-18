@@ -11,4 +11,21 @@ rl = [0.5]
 
 
 with mp.Pool(30) as pool:
+   pool.map(run_Model, [s for s in range(60)], chunksize = 2)
+   pool.close()
+
+with mp.Pool(30) as pool:
+   pool.map(run_Model, [s for s in range(60,120)], chunksize = 2)
+   pool.close()
+
+with mp.Pool(30) as pool:
+   pool.map(run_Model, [s for s in range(120,180)], chunksize = 2)
+   pool.close()
+
+with mp.Pool(30) as pool:
+   pool.map(run_Model, [s for s in range(180,240)], chunksize = 2)
+   pool.close()
+
+with mp.Pool(30) as pool:
    pool.map(run_Model, [s for s in range(240,300)], chunksize = 2)
+   pool.close()

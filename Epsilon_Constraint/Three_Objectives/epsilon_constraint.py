@@ -16,7 +16,6 @@ path = "/home/dkabe/Model_brainstorming/Input_Data/Realistic/"
 p_failure = 0.1
 p_running = 1 - p_failure
 instances = 2
-num_samples = 200
 Products  = [3,3]
 Outsourced =[3,3]
 
@@ -25,7 +24,7 @@ levels = 2
 Manufacturing_plants = [6, 6]
 Distribution = [4, 4]
 Market = [29, 29]
-numScenarios = [128, 200]
+numScenarios = [128, 300]
 
 # Read and append input files
 f_i = [None]*instances
@@ -493,7 +492,7 @@ def PrintToFileSummaryResults(instance, rl):
         ff.close()
     return
 
-def run_Model(e1, e2, instance = 0, rl = 0.5, num_Scenarios = 128, Manufacturing_plants = 6, Distribution = 4, Market = 29, Products = 3, Outsourced = 3, epsilon = 1500000, objDict = {'f1': 0, 'f2': 0, 'f3': 1}, f1 = 1, f2 = 1, f3 = 0, e3 = 1):
+def run_Model(e1, e2, instance = 1, rl = 0.5, num_Scenarios = 300, Manufacturing_plants = 6, Distribution = 4, Market = 29, Products = 3, Outsourced = 3, epsilon = 700000, objDict = {'f1': 0, 'f2': 0, 'f3': 1}, f1 = 1, f2 = 1, f3 = 0, e3 = 1):
     for key, value in objDict.items():
         objWeights[key] = value
 

@@ -25,7 +25,7 @@ levels = 2
 Manufacturing_plants = [6, 6]
 Distribution = [4, 4]
 Market = [29, 29]
-numScenarios = [128, 200]
+numScenarios = [128, 300]
 
 # Read and append input files
 f_i = [None]*instances
