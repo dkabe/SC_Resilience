@@ -166,7 +166,6 @@ def SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distributi
 def SolveModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced):
     grbModel.params.OutputFlag = 0
     #grbModel.params.timelimit = 900
-    start_time = time.time()
     grbModel.optimize()
     #gap = grbModel.MIPGAP
     # get variable values
@@ -201,7 +200,6 @@ def SolveModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, 
         Cost_dict["f4"] = np.round(get_rl_rate(v_val_w, instance, num_Scenarios, Market, Products), 2)
 
         Summary_dict['ObjVal'] = grbModel.objval
-        end_time = time.time()
             
         for s in range(num_Scenarios):
             Cost_dict["InHouseShipping_" + str(s)] = get_shipping_costs(instance, s,v_val_Y_ijm, v_val_Z_jkm, v_val_T_ljm, v_val_T_lkm, Manufacturing_plants, Distribution, Products, Market, Outsourced)[0]
@@ -220,7 +218,6 @@ def SolveModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, 
         Cost_dict["f1"] = np.round(Cost_dict["Opening"] + f1_cost, 2) # in house (opening + production + shipping)
         Cost_dict["f2"] = np.round(f2_cost, 2) # Outsourcing # (purchasing + shipping)
         Cost_dict["f3"] = np.round(f3_cost, 2) # lost sales
-    Summary_dict['CPU'] = end_time - start_time  
       
     
     return
@@ -492,7 +489,7 @@ def PrintToFileSummaryResults(instance, rl):
         ff.close()
     return
 
-def run_Model(e1, e2, instance = 1, rl = 0.5, num_Scenarios = 300, Manufacturing_plants = 6, Distribution = 4, Market = 29, Products = 3, Outsourced = 3, epsilon = 700000, objDict = {'f1': 0, 'f2': 0, 'f3': 1}, f1 = 1, f2 = 1, f3 = 0, e3 = 1):
+def run_Model(e2, e3, instance = 1, rl = 0.5, num_Scenarios = 300, Manufacturing_plants = 6, Distribution = 4, Market = 29, Products = 3, Outsourced = 3, epsilon = 700000, objDict = {'f1': 1, 'f2': 0, 'f3': 0}, f1 = 0, f2 = 1, f3 = 1, e1 = 1):
     for key, value in objDict.items():
         objWeights[key] = value
 

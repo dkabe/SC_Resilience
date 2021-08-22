@@ -15,17 +15,17 @@ e_list = [(e1, e2) for e1 in resolution for e2 in resolution]
 #for res in range(resolution):
  #   for res2 in range(resolution):
 
-with mp.Pool(40) as pool:
-    pool.starmap(run_Model, e_list[:40], chunksize=1)
-    pool.close()
+#with mp.Pool(40) as pool:
+ #   pool.starmap(run_Model, e_list[:40])
+  #  pool.close()
 
 #with mp.Pool(40) as pool:
  #   pool.starmap(run_Model, e_list[40:80], chunksize=1)
   #  pool.close()
 
-#with mp.Pool(40) as pool:
- #   pool.starmap(run_Model, e_list[80:120], chunksize=1)
-  #  pool.close()   
+with mp.Pool(40) as pool:
+    pool.starmap(run_Model, e_list[80:120], chunksize=1)
+    pool.close()   
 
 #with mp.Pool(40) as pool:
  #   pool.starmap(run_Model, e_list[120:160], chunksize=1)

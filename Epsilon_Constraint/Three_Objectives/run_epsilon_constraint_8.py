@@ -12,12 +12,11 @@ instance = 1
 resolution = range(20)
 e_list = [(e1, e2) for e1 in resolution for e2 in resolution]
 
-#for res in range(resolution):
- #   for res2 in range(resolution):
 
-with mp.Pool(40) as pool:
-    pool.starmap(run_Model, e_list[:40], chunksize=1)
-    pool.close()
+
+#with mp.Pool(40) as pool:
+ #   pool.starmap(run_Model, e_list[:40])
+  #  pool.close()
 
 #with mp.Pool(40) as pool:
  #   pool.starmap(run_Model, e_list[40:80], chunksize=1)
@@ -29,7 +28,7 @@ with mp.Pool(40) as pool:
 
 #with mp.Pool(40) as pool:
  #   pool.starmap(run_Model, e_list[120:160], chunksize=1)
- #   pool.close() 
+  #  pool.close() 
   
 #with mp.Pool(40) as pool:
  #   pool.starmap(run_Model, e_list[160:200], chunksize=1)
@@ -43,9 +42,9 @@ with mp.Pool(40) as pool:
  #   pool.starmap(run_Model, e_list[240:280], chunksize=1)
   #  pool.close() 
 
-#with mp.Pool(40) as pool:
- #   pool.starmap(run_Model, e_list[280:320], chunksize=1)
-  #  pool.close() 
+with mp.Pool(40) as pool:
+    pool.starmap(run_Model, e_list[280:320], chunksize=1)
+    pool.close() 
 
 #with mp.Pool(40) as pool:
  #   pool.starmap(run_Model, e_list[320:360], chunksize=1)
