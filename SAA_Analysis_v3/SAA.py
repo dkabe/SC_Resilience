@@ -159,7 +159,7 @@ def SolveModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, 
     global v_val_x_i
     global v_val_x_j
     grbModel.params.OutputFlag = 0
-    grbModel.params.timelimit = 900
+    #grbModel.params.timelimit = 900
     grbModel.optimize()
     #gap = grbModel.MIPGAP
     # get variable values
