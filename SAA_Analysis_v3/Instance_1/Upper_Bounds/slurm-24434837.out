@@ -1,0 +1,5 @@
+Unloading StdEnv/2020
+Using license file /cvmfs/soft.computecanada.ca/config/licenses/gurobi/beluga.lic
+Set parameter TokenServer to value license1.computecanada.ca
+slurmstepd: error: *** JOB 24434837 ON blg8442 CANCELLED AT 2021-08-28T16:59:35 DUE TO TIME LIMIT ***
+slurmstepd: error: Detected 28 oom-kill event(s) in step 24434837.batch cgroup. Some of your processes may have been killed by the cgroup out-of-memory handler.

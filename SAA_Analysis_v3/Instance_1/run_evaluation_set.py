@@ -9,6 +9,7 @@ epsilons = [1500000, 700000]
 rl = 0.5
 batches = 30
 N = [32, 64, 96, 128, 160, 192]
+N = [256]
 
 for num_Scenarios in N:
     for scen in range(3200):

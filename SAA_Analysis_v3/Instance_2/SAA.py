@@ -117,7 +117,7 @@ def InitializeModelParams(num_Scenarios, Market, Products, batch):
     global Scenarios
     global Probabilities 
     global demand
-    path = '/home/dkabe/Model_brainstorming/SAA_Analysis_v3/'
+    path = '/home/dkabe/Model_brainstorming/SAA_Analysis_v3/Instance_2/'
     demand = np.loadtxt(path + 'Scen_demand/demand' + "_" + str(num_Scenarios) + "_" + str(batch) + '.txt').reshape(num_Scenarios, Products, Market)
 
     text_file = open(path + 'Scenarios/' + str(num_Scenarios) + '_' + str(batch) + '.txt', "r")
@@ -410,14 +410,14 @@ def get_rl_rate(w, instance, num_Scenarios, Market, Products):
     return(rl_penalty)
 
 def PrintToFileSummaryResults(num_Scenarios):
-    results_file = "/home/dkabe/Model_brainstorming/SAA_Analysis_v3/Objectives/" + str(num_Scenarios) + "_results" + ".txt"
+    results_file = "/home/dkabe/Model_brainstorming/SAA_Analysis_v3/Instance_2/Objectives/" + str(num_Scenarios) + "_results" + ".txt"
     ff = open(results_file, "a")
     ff.write(str(Summary_dict['ObjVal']) + '\n')
     ff.close()
     return
 
 def SaveOpeningDecisions(num_Scenarios, batch):
-    results_file = "/home/dkabe/Model_brainstorming/SAA_Analysis_v3/Opening_Decisions/" + str(num_Scenarios) + "_scenarios/" + str(num_Scenarios) + "_" + str(batch) + "_opening_decisions" + ".txt"
+    results_file = "/home/dkabe/Model_brainstorming/SAA_Analysis_v3/Instance_2/Opening_Decisions/" + str(num_Scenarios) + "_scenarios/" + str(num_Scenarios) + "_" + str(batch) + "_opening_decisions" + ".txt"
    
     ff = open(results_file, "a")
     ff.write(str(v_val_x_i) + '\n')
