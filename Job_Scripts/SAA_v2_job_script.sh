@@ -6,4 +6,4 @@
 module load nixpkgs/16.09
 module load gurobi/9.0.1
 source ~/env_gurobi/bin/activate
-python /home/dkabe/Model_brainstorming/SAA_Analysis_v4/Instance_2/run_SAA.py
+python /home/dkabe/Model_brainstorming/SAA_Analysis_v5/Instance_2/run_SAA.py

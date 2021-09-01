@@ -1,0 +1,22 @@
+Unloading StdEnv/2020
+
+The following have been reloaded with a version change:
+  1) gurobi/9.1.2 => gurobi/9.0.2
+
+
+The following have been reloaded with a version change:
+  1) gurobi/9.0.2 => gurobi/9.0.1
+
+Using license file /cvmfs/soft.computecanada.ca/config/licenses/gurobi/beluga.lic
+Using gurobi.env file
+Set parameter TokenServer to value license1.computecanada.ca
+Set parameter Threads to value 1
+slurmstepd: error: _is_a_lwp: 1 read() attempts on /proc/265330/status failed: No such process
+slurmstepd: error: _is_a_lwp: open() /proc/44874/status failed: No such file or directory
+slurmstepd: error: _is_a_lwp: open() /proc/100615/status failed: No such file or directory
+slurmstepd: error: _is_a_lwp: open() /proc/120054/status failed: No such file or directory
+slurmstepd: error: _is_a_lwp: open() /proc/139011/status failed: No such file or directory
+slurmstepd: error: _is_a_lwp: open() /proc/237331/status failed: No such file or directory
+slurmstepd: error: _is_a_lwp: open() /proc/253315/status failed: No such file or directory
+slurmstepd: error: _is_a_lwp: 1 read() attempts on /proc/253318/status failed: No such process
+slurmstepd: error: _is_a_lwp: open() /proc/17253/status failed: No such file or directory
