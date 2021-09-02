@@ -5,7 +5,7 @@ instances = 2
 MPs = [6, 6]
 DCs = [4, 4]
 MZs = [29, 29]
-numScenarios = [128, 300]
+numScenarios = [192, 192]
 epsilons = [1500000, 700000]
 rl = [0.5, 0.55, 0.6 , 0.65, 0.7, 0.75, 0.8 , 0.85, 0.9 , 0.95]
 #for instance in range(1,2):

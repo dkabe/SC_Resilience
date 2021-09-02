@@ -5,27 +5,13 @@ instances = 2
 MPs = [6, 6]
 DCs = [4, 4]
 MZs = [29, 29]
-numScenarios = [128, 300]
+numScenarios = 192
 epsilons = [1500000, 700000]
-rl = [0.5]
+rl = [0.5, 0.75, 0.95]
 
 
-with mp.Pool(30) as pool:
-   pool.map(run_Model, [s for s in range(60)], chunksize = 2)
+#for r_level in rl:
+with mp.Pool(40) as pool:
+   pool.map(run_Model, [s  for s in range(192)])
    pool.close()
 
-with mp.Pool(30) as pool:
-   pool.map(run_Model, [s for s in range(60,120)], chunksize = 2)
-   pool.close()
-
-with mp.Pool(30) as pool:
-   pool.map(run_Model, [s for s in range(120,180)], chunksize = 2)
-   pool.close()
-
-with mp.Pool(30) as pool:
-   pool.map(run_Model, [s for s in range(180,240)], chunksize = 2)
-   pool.close()
-
-with mp.Pool(30) as pool:
-   pool.map(run_Model, [s for s in range(240,300)], chunksize = 2)
-   pool.close()

@@ -22,7 +22,7 @@ Products  = [3,3]
 Manufacturing_plants = [6, 6]
 Distribution = [4, 4]
 Market = [29, 29]
-numScenarios = [128, 300]
+numScenarios = [192, 192]
 
 # Read and append input files
 f_i = [None]*instances
@@ -252,8 +252,7 @@ def ModelCons(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, M
                         for s in range(num_Scenarios) for i in range(Manufacturing_plants))
 
     grbModel.addConstrs(quicksum(volume[instance][m]*Y_ijm[s,m,i,j] for i in range(Manufacturing_plants) for m in range(Products)) <=
-                        Scenarios[instance][s][1][j]*Capacities_j[instance][j]*x_j[j] for s in range(num_Scenarios) for s in range(num_Scenarios)
-                        for j in range(Distribution)) 
+                        Scenarios[instance][s][1][j]*Capacities_j[instance][j]*x_j[j] for s in range(num_Scenarios) for j in range(Distribution)) 
 
     # Resilience Metric (w = % of rl being missed)
     grbModel.addConstrs(w_s[s,k,m] >= rl - (1 - U_km[s,k,m]/demand[instance][s][m][k]) for s in range(num_Scenarios) for k in range(Market) for m in range(Products))
@@ -337,7 +336,7 @@ def PrintToFileSummaryResults(rl):
     return
 
 
-def run_Model(rl, instance=1, num_Scenarios=300, Manufacturing_plants=6, Distribution=4, Market=29, Products=3, objDict={'f1': 1, 'f2': 1}):
+def run_Model(rl, instance=1, num_Scenarios=192, Manufacturing_plants=6, Distribution=4, Market=29, Products=3, objDict={'f1': 1, 'f2': 1}):
     for key, value in objDict.items():
         objWeights[key] = value
 

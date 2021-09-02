@@ -22,7 +22,7 @@ levels = 2
 Manufacturing_plants = [6, 6]
 Distribution = [4, 4]
 Market = [29, 29]
-numScenarios = [128, 300]
+numScenarios = [192, 192]
 
 # Read and append input files
 f_i = [None]*instances
@@ -94,7 +94,6 @@ V2_lm = {} # quantity products purchased from outsourcing in excess of epsilon t
 Q_im = {} # quantity of product m produced at plant i
 Y_ijm = {} # shipping i -> j
 Z_jkm = {} # shipping j -> k
-T_ljm = {} # shipping l -> j
 T_lkm = {} # shipping l -> k
 w_s = {} # penalty for not meeting demand above specified rate
 
@@ -107,7 +106,6 @@ v_val_V2_lm = {}
 v_val_Q_im = {}
 v_val_Y_ijm = {}
 v_val_Z_jkm = {}
-v_val_T_ljm = {}
 v_val_T_lkm = {}
 v_val_w = {}
 
@@ -156,11 +154,7 @@ def SetGurobiModel_det(instance, rl, Manufacturing_plants, Distribution, Market,
         for j in range(Distribution):
             for k in range(Market):
                 Z_jkm[m,j,k] = grbModel_det.addVar(vtype = GRB.CONTINUOUS)
-
-    for m in range(Products):
-        for l in range(Outsourced):
-            for j in range(Distribution):
-                T_ljm[m,l,j] = grbModel_det.addVar(vtype = GRB.CONTINUOUS)
+    
 
     for m in range(Products):
         for l in range(Outsourced):
@@ -220,11 +214,7 @@ def SetGrb_Obj_det(instance, rl, Manufacturing_plants, Distribution, Market, Pro
         for k in range(Market):
             for m in range(Products):
                 ship_2 += Transportation_j_k[instance][m][j][k]*Z_jkm[m,j,k]
-
-    for l in range(Outsourced):
-        for j in range(Distribution):
-            for m in range(Products):
-                ship_3 += T_O_DC[instance][m][l][j]*T_ljm[m,l,j]
+    
 
     for l in range(Outsourced):
         for k in range(Market):
@@ -276,8 +266,7 @@ def ModelCons_det(instance, rl, Manufacturing_plants, Distribution, Market, Prod
     grbModel_det.addConstrs(Q_im[m,i] >= quicksum(Y_ijm[m,i,j] for j in range(Distribution))
                          for i in range(Manufacturing_plants) for m in range(Products))
 
-    grbModel_det.addConstrs((quicksum(Y_ijm[m,i,j] for i in range(Manufacturing_plants)) +
-                         quicksum(T_ljm[m,l,j] for l in range(Outsourced))) >= quicksum(Z_jkm[m,j,k] for k in range(Market))
+    grbModel_det.addConstrs(quicksum(Y_ijm[m,i,j] for i in range(Manufacturing_plants)) >= quicksum(Z_jkm[m,j,k] for k in range(Market))
                         for j in range(Distribution) for m in range(Products))
 
     grbModel_det.addConstrs((quicksum(Z_jkm[m,j,k] for j in range(Distribution)) +
@@ -286,16 +275,14 @@ def ModelCons_det(instance, rl, Manufacturing_plants, Distribution, Market, Prod
 
 
     # Purchasing Constraints (everything purchased from outsourced facilities must be shipped)
-    grbModel_det.addConstrs(V1_lm[m,l] + V2_lm[m,l] >= quicksum(T_ljm[m,l,j] for j in range(Distribution)) +
-                        quicksum(T_lkm[m,l,k] for k in range(Market))
+    grbModel_det.addConstrs(V1_lm[m,l] + V2_lm[m,l] >= quicksum(T_lkm[m,l,k] for k in range(Market))
                         for m in range(Products) for l in range(Outsourced))
 
     # Capacity Constraints
     grbModel_det.addConstrs(quicksum(volume[instance][m]*Q_im[m,i] for m in range(Products)) <= Scenarios[instance][s1][0][i]*Capacities_i[instance][i]*x_i[i]
                          for i in range(Manufacturing_plants))
 
-    grbModel_det.addConstrs(quicksum(volume[instance][m]*Y_ijm[m,i,j] for i in range(Manufacturing_plants) for m in range(Products)) +
-                        quicksum(volume[instance][m]*T_ljm[m,l,j] for l in range(Outsourced) for m in range(Products)) <=
+    grbModel_det.addConstrs(quicksum(volume[instance][m]*Y_ijm[m,i,j] for i in range(Manufacturing_plants) for m in range(Products)) <=
                         Scenarios[instance][s1][1][j]*Capacities_j[instance][j]*x_j[j]
                         for j in range(Distribution))
 
