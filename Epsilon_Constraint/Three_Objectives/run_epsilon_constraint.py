@@ -5,7 +5,7 @@ instances = 2
 MPs = [6, 6]
 DCs = [4, 4]
 MZs = [29, 29]
-numScenarios = [128, 300]
+numScenarios = [192, 192]
 epsilons = [1500000, 700000]
 rl = 0.5
 instance = 1
@@ -16,7 +16,7 @@ e_list = [(e1, e2) for e1 in resolution for e2 in resolution]
  #   for res2 in range(resolution):
 
 with mp.Pool(40) as pool:
-    pool.starmap(run_Model, e_list[:40], chunksize=1)
+    pool.starmap(run_Model, e_list)
     pool.close()
 
 #with mp.Pool(40) as pool:

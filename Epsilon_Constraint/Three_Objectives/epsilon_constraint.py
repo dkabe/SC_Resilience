@@ -24,7 +24,7 @@ levels = 2
 Manufacturing_plants = [6, 6]
 Distribution = [4, 4]
 Market = [29, 29]
-numScenarios = [128, 300]
+numScenarios = [192, 192]
 
 # Read and append input files
 f_i = [None]*instances
@@ -98,7 +98,6 @@ V2_lm = {} # quantity products purchased from outsourcing in excess of epsilon t
 Q_im = {} # quantity of product m produced at plant i
 Y_ijm = {} # shipping i -> j
 Z_jkm = {} # shipping j -> k
-T_ljm = {} # shipping l -> j
 T_lkm = {} # shipping l -> k
 w_s = {} # penalty for not meeting demand above specified rate
 v_s = {}
@@ -111,7 +110,6 @@ v_val_V2_lm = {}
 v_val_Q_im = {}
 v_val_Y_ijm = {}
 v_val_Z_jkm = {}
-v_val_T_ljm = {}
 v_val_T_lkm = {}
 v_val_w = {}
 
@@ -142,7 +140,6 @@ def SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distributi
     global Q_im 
     global Y_ijm 
     global Z_jkm 
-    global T_ljm 
     global T_lkm 
     global w_s 
     global v_s 
@@ -155,7 +152,6 @@ def SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distributi
     Q_im = grbModel.addVars(range(num_Scenarios), range(Products), range(Manufacturing_plants), vtype = GRB.CONTINUOUS)
     Y_ijm = grbModel.addVars(range(num_Scenarios), range(Products), range(Manufacturing_plants), range(Distribution), vtype = GRB.CONTINUOUS)
     Z_jkm = grbModel.addVars(range(num_Scenarios), range(Products), range(Distribution), range(Market), vtype = GRB.CONTINUOUS)
-    T_ljm = grbModel.addVars(range(num_Scenarios), range(Products), range(Outsourced), range(Distribution), vtype = GRB.CONTINUOUS)
     T_lkm = grbModel.addVars(range(num_Scenarios), range(Products), range(Outsourced), range(Market), vtype = GRB.CONTINUOUS)
     w_s = grbModel.addVars(range(num_Scenarios), range(Market), range(Products), vtype = GRB.CONTINUOUS)
     v_s = grbModel.addVars(range(num_Scenarios), range(Market), range(Products), vtype = GRB.CONTINUOUS, lb = float('-inf'))
@@ -178,7 +174,6 @@ def SolveModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, 
     global v_val_Q_im 
     global v_val_Y_ijm 
     global v_val_Z_jkm 
-    global v_val_T_ljm 
     global v_val_T_lkm 
     global v_val_w
 
@@ -192,7 +187,6 @@ def SolveModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, 
         v_val_Q_im = grbModel.getAttr('x', Q_im)
         v_val_Y_ijm = grbModel.getAttr('x', Y_ijm)
         v_val_Z_jkm = grbModel.getAttr('x', Z_jkm)
-        v_val_T_ljm = grbModel.getAttr('x', T_ljm)
         v_val_T_lkm = grbModel.getAttr('x', T_lkm)
         v_val_w = grbModel.getAttr('x', w_s)
         Cost_dict["Opening"] =  get_opening_costs(instance, v_val_x_i, v_val_x_j, Manufacturing_plants, Distribution)
@@ -202,8 +196,8 @@ def SolveModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, 
         Summary_dict['ObjVal'] = grbModel.objval
             
         for s in range(num_Scenarios):
-            Cost_dict["InHouseShipping_" + str(s)] = get_shipping_costs(instance, s,v_val_Y_ijm, v_val_Z_jkm, v_val_T_ljm, v_val_T_lkm, Manufacturing_plants, Distribution, Products, Market, Outsourced)[0]
-            Cost_dict["OutsourceShipping_" + str(s)] = get_shipping_costs(instance, s,v_val_Y_ijm, v_val_Z_jkm, v_val_T_ljm, v_val_T_lkm, Manufacturing_plants, Distribution, Products, Market, Outsourced)[1]
+            Cost_dict["InHouseShipping_" + str(s)] = get_shipping_costs(instance, s,v_val_Y_ijm, v_val_Z_jkm, v_val_T_lkm, Manufacturing_plants, Distribution, Products, Market, Outsourced)[0]
+            Cost_dict["OutsourceShipping_" + str(s)] = get_shipping_costs(instance, s,v_val_Y_ijm, v_val_Z_jkm, v_val_T_lkm, Manufacturing_plants, Distribution, Products, Market, Outsourced)[1]
             Cost_dict["Production_" + str(s)] = get_production_cost(instance, s,v_val_Q_im, Manufacturing_plants, Products)
             Cost_dict["Purchasing_" + str(s)] = get_purchase_costs(instance, s,v_val_V1_lm, v_val_V2_lm, Outsourced, Products)
             Cost_dict["LostSales_" + str(s)] = get_lost_cost(instance, s,v_val_U_km, Market, Products)    
@@ -256,12 +250,7 @@ def SetGrb_Obj(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, 
         for j in range(Distribution):
             for k in range(Market):
                 for m in range(Products):
-                    ship_2 += Transportation_j_k[instance][m][j][k]*Z_jkm[s,m,j,k]
-
-        for l in range(Outsourced):
-            for j in range(Distribution):
-                for m in range(Products):
-                    ship_3 += T_O_DC[instance][m][l][j]*T_ljm[s,m,l,j]
+                    ship_2 += Transportation_j_k[instance][m][j][k]*Z_jkm[s,m,j,k]        
 
         for l in range(Outsourced):
             for k in range(Market):
@@ -317,8 +306,7 @@ def ModelCons(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, M
     grbModel.addConstrs(Q_im[s,m,i] == quicksum(Y_ijm[s,m,i,j] for j in range(Distribution))
                          for s in range(num_Scenarios) for i in range(Manufacturing_plants) for m in range(Products))
 
-    grbModel.addConstrs((quicksum(Y_ijm[s,m,i,j] for i in range(Manufacturing_plants)) +
-                         quicksum(T_ljm[s,m,l,j] for l in range(Outsourced))) == quicksum(Z_jkm[s,m,j,k] for k in range(Market))
+    grbModel.addConstrs(quicksum(Y_ijm[s,m,i,j] for i in range(Manufacturing_plants)) == quicksum(Z_jkm[s,m,j,k] for k in range(Market))
                         for s in range(num_Scenarios) for j in range(Distribution) for m in range(Products))
 
     grbModel.addConstrs(quicksum(Z_jkm[s,m,j,k] for j in range(Distribution)) +
@@ -328,18 +316,15 @@ def ModelCons(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, M
 
 
     # Purchasing Constraints (everything purchased from outsourced facilities must be shipped)
-    grbModel.addConstrs(V1_lm[s,m,l] + V2_lm[s,m,l] == quicksum(T_ljm[s,m,l,j] for j in range(Distribution)) +
-                        quicksum(T_lkm[s,m,l,k] for k in range(Market)) for s in range(num_Scenarios)
+    grbModel.addConstrs(V1_lm[s,m,l] + V2_lm[s,m,l] == quicksum(T_lkm[s,m,l,k] for k in range(Market)) for s in range(num_Scenarios)
                         for m in range(Products) for l in range(Outsourced))
 
     # Capacity Constraints
     grbModel.addConstrs(quicksum(volume[instance][m]*Q_im[s,m,i] for m in range(Products)) <= Scenarios[instance][s][0][i]*Capacities_i[instance][i]*x_i[i]
                         for s in range(num_Scenarios) for i in range(Manufacturing_plants))
 
-    grbModel.addConstrs(quicksum(volume[instance][m]*Y_ijm[s,m,i,j] for i in range(Manufacturing_plants) for m in range(Products)) +
-                        quicksum(volume[instance][m]*T_ljm[s,m,l,j] for l in range(Outsourced) for m in range(Products)) <=
-                        Scenarios[instance][s][1][j]*Capacities_j[instance][j]*x_j[j] for s in range(num_Scenarios) for s in range(num_Scenarios)
-                        for j in range(Distribution))
+    grbModel.addConstrs(quicksum(volume[instance][m]*Y_ijm[s,m,i,j] for i in range(Manufacturing_plants) for m in range(Products)) <=
+                        Scenarios[instance][s][1][j]*Capacities_j[instance][j]*x_j[j] for s in range(num_Scenarios) for j in range(Distribution))
 
     grbModel.addConstrs((V1_lm[s,m,l] + V2_lm[s,m,l] <= (Capacities_l[instance][m][l])) for s in range(num_Scenarios)
                         for l in range(Outsourced) for m in range(Products))
@@ -361,7 +346,6 @@ def ModelCons(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, M
     
     if f2:
         grbModel.addConstr(quicksum(Probabilities[instance][s]*(Supplier_cost[instance][0][m][l]*V1_lm[s,m,l] + Supplier_cost[instance][1][m][l]*V2_lm[s,m,l]) for s in range(num_Scenarios) for m in range(Products) for l in range(Outsourced))
-                        + quicksum(Probabilities[instance][s]*T_O_DC[instance][m][l][j]*T_ljm[s,m,l,j] for s in range(num_Scenarios) for m in range(Products) for l in range(Outsourced) for j in range(Distribution))
                         + quicksum(Probabilities[instance][s]*T_O_MZ[instance][m][l][k]*T_lkm[s,m,l,k] for s in range(num_Scenarios) for m in range(Products) for l in range(Outsourced) for k in range(Market)) <= ranges[1][e2])
 
     if f3:
@@ -385,7 +369,7 @@ def get_opening_costs(instance, x1, x2, Manufacturing_plants, Distribution):
 
     return(Opening)
 
-def get_shipping_costs(instance, scen, Y, Z, T1, T2, Manufacturing_plants, Distribution, Products, Market, Outsourced):
+def get_shipping_costs(instance, scen, Y, Z, T2, Manufacturing_plants, Distribution, Products, Market, Outsourced):
     ship_1 = 0
     ship_2 = 0
     ship_3 = 0
@@ -400,12 +384,7 @@ def get_shipping_costs(instance, scen, Y, Z, T1, T2, Manufacturing_plants, Distr
     for j in range(Distribution):
         for k in range(Market):
             for m in range(Products):
-                ship_2 += Transportation_j_k[instance][m][j][k]*Z[scen,m,j,k]
-
-    for l in range(Outsourced):
-        for j in range(Distribution):
-            for m in range(Products):
-                ship_3 += T_O_DC[instance][m][l][j]*T1[scen,m,l,j]
+                ship_2 += Transportation_j_k[instance][m][j][k]*Z[scen,m,j,k]    
 
     for l in range(Outsourced):
         for k in range(Market):
@@ -448,7 +427,7 @@ def get_lost_cost(instance, scen, U, Market, Products):
 
     return(np.round(l_cost))
 
-def get_outsourced_cost(instance, scen, V1, V2, T1, T2, Distribution, Products, Outsourced, Market):
+def get_outsourced_cost(instance, scen, V1, V2, T2, Distribution, Products, Outsourced, Market):
     # Buying from outsource cost
     b_cost = 0
     ship_to_distribution = 0
@@ -457,12 +436,7 @@ def get_outsourced_cost(instance, scen, V1, V2, T1, T2, Distribution, Products, 
         for m in range(Products):
             b_cost += Supplier_cost[instance][0][m][l]*V1[scen,m,l] + Supplier_cost[instance][1][m][l]*V2[scen,m,l]
 
-    # Shipping from outsourced cost
-    for l in range(Outsourced):
-        for j in range(Distribution):
-            for m in range(Products):
-                ship_to_distribution += T_O_DC[instance][m][l][j]*T1[scen,m,l,j]
-
+   
     for l in range(Outsourced):
         for k in range(Market):
             for m in range(Products):
@@ -489,7 +463,7 @@ def PrintToFileSummaryResults(instance, rl):
         ff.close()
     return
 
-def run_Model(e2, e3, instance = 1, rl = 0.5, num_Scenarios = 300, Manufacturing_plants = 6, Distribution = 4, Market = 29, Products = 3, Outsourced = 3, epsilon = 700000, objDict = {'f1': 1, 'f2': 0, 'f3': 0}, f1 = 0, f2 = 1, f3 = 1, e1 = 1):
+def run_Model(e1, e3, instance = 0, rl = 0.5, num_Scenarios = 192, Manufacturing_plants = 6, Distribution = 4, Market = 29, Products = 3, Outsourced = 3, epsilon = 1500000, objDict = {'f1': 0, 'f2': 1, 'f3': 0}, f1 = 1, f2 = 0, f3 = 1, e2 = 1):
     for key, value in objDict.items():
         objWeights[key] = value
 
