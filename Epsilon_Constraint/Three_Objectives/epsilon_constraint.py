@@ -463,7 +463,7 @@ def PrintToFileSummaryResults(instance, rl):
         ff.close()
     return
 
-def run_Model(e2, e3, instance = 1, rl = 0.5, num_Scenarios = 192, Manufacturing_plants = 6, Distribution = 4, Market = 29, Products = 3, Outsourced = 3, epsilon = 700000, objDict = {'f1': 1, 'f2': 0, 'f3': 0}, f1 = 0, f2 = 1, f3 = 1, e1 = 1):
+def run_Model(e1, e3, instance = 1, rl = 0.5, num_Scenarios = 192, Manufacturing_plants = 6, Distribution = 4, Market = 29, Products = 3, Outsourced = 3, epsilon = 700000, objDict = {'f1': 0, 'f2': 1, 'f3': 1}, f1 = 1, f2 = 0, f3 = 0, e2 = 1):
     for key, value in objDict.items():
         objWeights[key] = value
 

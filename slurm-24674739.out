@@ -1,0 +1,6 @@
+Unloading StdEnv/2020
+Using license file /cvmfs/soft.computecanada.ca/config/licenses/gurobi/beluga.lic
+Using gurobi.env file
+Set parameter TokenServer to value license1.computecanada.ca
+Set parameter Threads to value 1
+slurmstepd: error: *** JOB 24674739 ON blg9317 CANCELLED AT 2021-09-05T21:09:08 ***
