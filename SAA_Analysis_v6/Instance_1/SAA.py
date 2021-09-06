@@ -407,7 +407,7 @@ def PrintToFileSummaryResults(num_Scenarios):
 def SaveOpeningDecisions(num_Scenarios, batch):
     results_file = "/home/dkabe/Model_brainstorming/SAA_Analysis_v6/Instance_1/Opening_Decisions/" + str(num_Scenarios) + "_scenarios/" + str(num_Scenarios) + "_" + str(batch) + "_opening_decisions" + ".txt"
    
-    ff = open(results_file, "a")
+    ff = open(results_file, "w+")
     ff.write(str(v_val_x_i) + '\n')
     ff.write(str(v_val_x_j))
     ff.close()

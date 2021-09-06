@@ -10,7 +10,7 @@ epsilons = [1500000, 700000]
 rl = 0.5
 batches = range(30)
 N = [64, 128, 192, 256, 320, 384, 448]
-N = [448]
+N = [320, 384]
 start_time = time.time()
 
 for num_Scenarios in N:

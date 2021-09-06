@@ -8,7 +8,7 @@ epsilons = [1500000, 700000]
 rl = 0.5
 batches = range(30)
 #N = [64, 128, 192, 256, 320, 384]
-#N = [384]
+N = [192, 256, 320]
 
 
 #for batch in range(batches):
