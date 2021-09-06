@@ -72,8 +72,8 @@ for instance in range(instances):
     Supplier_cost[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/SupplierCost_' + str(instance + 1) + '.txt').reshape((levels, Products[instance], Outsourced[instance]))
 
 
-demand = np.loadtxt("/home/dkabe/Model_brainstorming/SAA_Analysis_v5/Instance_2/eval_set_demand.txt").reshape((10000,3,29))
-text_file = open("/home/dkabe/Model_brainstorming/SAA_Analysis_v5/Instance_2/Evaluation_Set.txt", "r")
+demand = np.loadtxt("/home/dkabe/Model_brainstorming/SAA_Analysis_v6/Instance_2/eval_set_demand.txt").reshape((10000,3,29))
+text_file = open("/home/dkabe/Model_brainstorming/SAA_Analysis_v6/Instance_2/Evaluation_Set.txt", "r")
 ls = text_file.read().split('\n')[:-1]
 Scenarios = list(map(lambda x: ast.literal_eval(x), ls))
 # Initialize model variables
@@ -116,7 +116,7 @@ grbModel = Model('stochasticResil')
 def InitializeModelParams(num_Scenarios, batch):
     global x_i
     global x_j
-    path = "/home/dkabe/Model_brainstorming/SAA_Analysis_v5/Instance_2/Opening_Decisions/"
+    path = "/home/dkabe/Model_brainstorming/SAA_Analysis_v6/Instance_2/Opening_Decisions/"
     f = open(path + str(num_Scenarios) + "_scenarios/" + str(num_Scenarios) + "_" + str(batch) + "_opening_decisions" + ".txt", "r")
     text = f.read()
     f.close()
@@ -398,7 +398,7 @@ def get_rl_rate(w, instance, num_Scenarios, Market, Products):
     return(rl_penalty)
 
 def PrintToFileSummaryResults(num_Scenarios, batch):
-    results_file = "/home/dkabe/Model_brainstorming/SAA_Analysis_v5/Instance_2/Upper_Bounds/" + str(num_Scenarios) + "_scenarios/" + str(num_Scenarios) + "_" + str(batch) + "_UB_results" + ".txt"
+    results_file = "/home/dkabe/Model_brainstorming/SAA_Analysis_v6/Instance_2/Upper_Bounds/" + str(num_Scenarios) + "_scenarios/" + str(num_Scenarios) + "_" + str(batch) + "_UB_results" + ".txt"
     ff = open(results_file, "a")
     ff.write(str(Summary_dict['ObjVal']) + '\n')
     ff.close()
