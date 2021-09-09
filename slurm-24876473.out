@@ -3,4 +3,4 @@ Using license file /cvmfs/soft.computecanada.ca/config/licenses/gurobi/beluga.li
 Using gurobi.env file
 Set parameter TokenServer to value license1.computecanada.ca
 Set parameter Threads to value 1
-slurmstepd: error: *** JOB 24674739 ON blg9317 CANCELLED AT 2021-09-05T21:09:08 ***
+slurmstepd: error: *** JOB 24876473 ON blg9321 CANCELLED AT 2021-09-08T16:59:27 DUE TO TIME LIMIT ***
