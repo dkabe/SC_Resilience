@@ -75,15 +75,12 @@ for instance in range(instances):
     Supplier_cost[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/SupplierCost_' + str(instance + 1) + '.txt').reshape((levels, Products[instance], Outsourced[instance]))
 
 Scenarios = []
-Probabilities = []
 
 for instance in range(instances):
     text_file = open(path + 'Instance_' + str(instance + 1) + '/scen_' + str(instance + 1) + '.txt', "r")
     ls = text_file.read().split('\n')[:-1]
     Scen = list(map(lambda x: ast.literal_eval(x), ls))
-    p_scen = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/p_scen_' + str(instance + 1) + '.txt')
     Scenarios.append(Scen)
-    Probabilities.append(p_scen)
 
 # Initialize model variables
 
@@ -201,14 +198,14 @@ def SolveModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, 
     f2_cost = 0
     f3_cost = 0
     for s in range(num_Scenarios):
-        f1_cost += Probabilities[instance][s]*(Cost_dict['Production_' + str(s)] + Cost_dict['InHouseShipping_' + str(s)])
-        f2_cost += Probabilities[instance][s]*(Cost_dict['Purchasing_' + str(s)] + Cost_dict['OutsourceShipping_' + str(s)])
-        f3_cost +=  Probabilities[instance][s]*Cost_dict['LostSales_' + str(s)]
-    Cost_dict["f1"] = np.round(Cost_dict["Opening"] + f1_cost, 2) # in house (opening + production + shipping)
-    Cost_dict["f2"] = np.round(f2_cost, 2) # Outsourcing # (purchasing + shipping)
-    Cost_dict["f3"] = np.round(f3_cost, 2) # lost sales
-    Summary_dict['Demand_met'] = np.sum([Probabilities[instance][s]*(Summary_dict["Purchasing_" + str(s)] + Summary_dict["Production_" + str(s)])/np.sum(demand[instance][s]) for s in range(num_Scenarios)])
-    Summary_dict['Demand_outsourced'] = np.sum([Probabilities[instance][s]*Summary_dict["Purchasing_" + str(s)]/np.sum(demand[instance][s]) for s in range(num_Scenarios)])
+        f1_cost += (Cost_dict['Production_' + str(s)] + Cost_dict['InHouseShipping_' + str(s)])
+        f2_cost += (Cost_dict['Purchasing_' + str(s)] + Cost_dict['OutsourceShipping_' + str(s)])
+        f3_cost +=  Cost_dict['LostSales_' + str(s)]
+    Cost_dict["f1"] = np.round(Cost_dict["Opening"] + f1_cost/num_Scenarios, 2) # in house (opening + production + shipping)
+    Cost_dict["f2"] = np.round(f2_cost/num_Scenarios, 2) # Outsourcing # (purchasing + shipping)
+    Cost_dict["f3"] = np.round(f3_cost/num_Scenarios, 2) # lost sales
+    Summary_dict['Demand_met'] = np.mean([(Summary_dict["Purchasing_" + str(s)] + Summary_dict["Production_" + str(s)])/np.sum(demand[instance][s]) for s in range(num_Scenarios)])
+    Summary_dict['Demand_outsourced'] = np.mean([Summary_dict["Purchasing_" + str(s)]/np.sum(demand[instance][s]) for s in range(num_Scenarios)])
 
     
     return
@@ -253,7 +250,7 @@ def SetGrb_Obj(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, 
                 for m in range(Products):
                     ship_4 += T_O_MZ[instance][m][l][k]*T_lkm[s,m,l,k]
 
-        total_shipment += Probabilities[instance][s]*(ship_1 + ship_2 + ship_3 + ship_4)
+        total_shipment += (ship_1 + ship_2 + ship_3 + ship_4)
 
         # Production
         pr_cost = 0
@@ -261,7 +258,7 @@ def SetGrb_Obj(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, 
             for m in range(Products):
                 pr_cost += Manufacturing_costs[instance][i][m]*Q_im[s,m,i]
 
-        total_pr_cost += Probabilities[instance][s]*pr_cost
+        total_pr_cost += pr_cost
 
         # Buying from outsource cost
         b_cost = 0
@@ -269,7 +266,7 @@ def SetGrb_Obj(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, 
             for m in range(Products):
                 b_cost += Supplier_cost[instance][0][m][l]*V1_lm[s,m,l] + Supplier_cost[instance][1][m][l]*V2_lm[s,m,l]
 
-        total_b_cost += Probabilities[instance][s]*b_cost
+        total_b_cost += b_cost
 
         #Lost Sales
         l_cost = 0
@@ -277,16 +274,16 @@ def SetGrb_Obj(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, 
             for m in range(Products):
                 l_cost += lost_sales[instance][k][m]*U_km[s,k,m]
 
-        total_l_cost += Probabilities[instance][s]*l_cost
+        total_l_cost += l_cost
 
     # Percentage of demand met
     rl_penalty = 0
     for s in range(num_Scenarios):
         for k in range(Market):
             for m in range(Products):
-                rl_penalty += Probabilities[instance][s]*lost_sales[instance][k][m]*w_s[s,k,m]*demand[instance][s][m][k]
+                rl_penalty += lost_sales[instance][k][m]*w_s[s,k,m]*demand[instance][s][m][k]
 
-    grb_expr += objWeights['f1']*(OC_1 + OC_2 + (total_shipment + total_pr_cost + total_b_cost + total_l_cost)) + objWeights['f2']*rl_penalty
+    grb_expr += objWeights['f1']*(OC_1 + OC_2 + (total_shipment + total_pr_cost + total_b_cost + total_l_cost)/num_Scenarios) + objWeights['f2']*rl_penalty/num_Scenarios
 
     grbModel.setObjective(grb_expr, GRB.MINIMIZE)
 
@@ -427,9 +424,9 @@ def get_rl_rate(w, instance, num_Scenarios, Market, Products):
     for s in range(num_Scenarios):
         for k in range(Market):
             for m in range(Products):
-                rl_penalty += Probabilities[instance][s]*lost_sales[instance][k][m]*w[s,k,m]*demand[instance][s][m][k]
+                rl_penalty += lost_sales[instance][k][m]*w[s,k,m]*demand[instance][s][m][k]
 
-    return(rl_penalty)
+    return(rl_penalty/num_Scenarios)
 
 def save_v_values(instance, rl, save_results):
     values = ["v_val_x_i", "v_val_x_j", "v_val_U_km", "v_val_V1_lm", "v_val_V2_lm", "v_val_Q_im", "v_val_Y_ijm", "v_val_Z_jkm", "v_val_T_lkm", "v_val_w"]
@@ -459,7 +456,7 @@ def PrintToFileSummaryResults(rl):
     return
 
 
-def run_Model(rl, instance=1, num_Scenarios=192, Manufacturing_plants=6, Distribution=4, Market=29, Products=3, Outsourced=3, epsilon=700000, objDict={'f1': 1, 'f2': 1}, save_results=0):
+def run_Model(rl, instance=0, num_Scenarios=192, Manufacturing_plants=6, Distribution=4, Market=29, Products=3, Outsourced=3, epsilon=1500000, objDict={'f1': 1, 'f2': 1}, save_results=0):
     for key, value in objDict.items():
         objWeights[key] = value
     start_time = time.time()

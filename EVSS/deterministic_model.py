@@ -13,7 +13,6 @@ path = "/home/dkabe/Model_brainstorming/Input_Data/Realistic/"
 p_failure = 0.1
 p_running = 1 - p_failure
 instances = 2
-num_samples = 200
 Products  = [3,3]
 Outsourced =[3,3]
 
@@ -74,15 +73,12 @@ for instance in range(instances):
     Supplier_cost[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/SupplierCost_' + str(instance + 1) + '.txt').reshape((levels, Products[instance], Outsourced[instance]))
 
 Scenarios = []
-Probabilities = []
 
 for instance in range(instances):
     text_file = open(path + 'Instance_' + str(instance + 1) + '/scen_' + str(instance + 1) + '.txt', "r")
     ls = text_file.read().split('\n')[:-1]
     Scen = list(map(lambda x: ast.literal_eval(x), ls))
-    p_scen = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/p_scen_' + str(instance + 1) + '.txt')
     Scenarios.append(Scen)
-    Probabilities.append(p_scen)
 
 # Initialize model variables
 
