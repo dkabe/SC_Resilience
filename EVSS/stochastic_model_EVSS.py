@@ -287,7 +287,7 @@ def save_results(instance, rl):
 
     return
 
-def run_Model(s1, rl=0.95, instance=0, num_Scenarios=192, Manufacturing_plants=6, Distribution=4, Market=29, Products=3, Outsourced=3, epsilon=1500000):
+def run_Model(s1, rl=0.95, instance=1, num_Scenarios=192, Manufacturing_plants=6, Distribution=4, Market=29, Products=3, Outsourced=3, epsilon=700000):
     InitializeModelParams(instance, s1, rl)
     SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, s1)
     SolveModel(s1, instance)
