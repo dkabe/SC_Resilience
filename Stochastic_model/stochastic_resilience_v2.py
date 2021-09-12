@@ -456,7 +456,7 @@ def PrintToFileSummaryResults(rl):
     return
 
 
-def run_Model(rl, instance=0, num_Scenarios=192, Manufacturing_plants=6, Distribution=4, Market=29, Products=3, Outsourced=3, epsilon=1500000, objDict={'f1': 1, 'f2': 1}, save_results=0):
+def run_Model(rl, instance=1, num_Scenarios=192, Manufacturing_plants=6, Distribution=4, Market=29, Products=3, Outsourced=3, epsilon=700000, objDict={'f1': 1, 'f2': 1}, save_results=0):
     for key, value in objDict.items():
         objWeights[key] = value
     start_time = time.time()
