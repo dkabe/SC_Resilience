@@ -62,15 +62,12 @@ for instance in range(instances):
     volume[instance] = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/Volume_' + str(instance + 1) + '.txt')
 
 Scenarios = []
-Probabilities = []
 
 for instance in range(instances):
     text_file = open(path + 'Instance_' + str(instance + 1) + '/scen_' + str(instance + 1) + '.txt', "r")
     ls = text_file.read().split('\n')[:-1]
     Scen = list(map(lambda x: ast.literal_eval(x), ls))
-    p_scen = np.loadtxt(path + 'Instance_' + str(instance + 1) + '/p_scen_' + str(instance + 1) + '.txt')
     Scenarios.append(Scen)
-    Probabilities.append(p_scen)
 
 
 # Initialize model variables
@@ -150,14 +147,13 @@ def SolveModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, 
     f1_cost = 0
     f3_cost = 0
     for s in range(num_Scenarios):
-        f1_cost += Probabilities[instance][s]*(Cost_dict['Production_' + str(s)] + Cost_dict['InHouseShipping_' + str(s)])
-        f3_cost +=  Probabilities[instance][s]*Cost_dict['LostSales_' + str(s)]
-    Cost_dict["f1"] = np.round(Cost_dict["Opening"] + f1_cost, 2) # in house (opening + production + shipping)
-    Cost_dict["f3"] = np.round(f3_cost, 2) # lost sales
-    Summary_dict['Demand_met'] = np.sum([Probabilities[instance][s]*(Summary_dict["Production_" + str(s)])/np.sum(demand[instance][s]) for s in range(num_Scenarios)])
-    end_time = time.time()
+        f1_cost += (Cost_dict['Production_' + str(s)] + Cost_dict['InHouseShipping_' + str(s)])
+        f3_cost +=  Cost_dict['LostSales_' + str(s)]
+    Cost_dict["f1"] = np.round(Cost_dict["Opening"] + f1_cost/num_Scenarios, 2) # in house (opening + production + shipping)
+    Cost_dict["f3"] = np.round(f3_cost/num_Scenarios, 2) # lost sales
+    Summary_dict['Demand_met'] = np.mean([(Summary_dict["Production_" + str(s)])/np.sum(demand[instance][s]) for s in range(num_Scenarios)])
 
-    Summary_dict['CPU'] = end_time - start_time  
+
     #print("obj val: ", Summary_dict['ObjVal'])
     #print("Opening Decisions: ", sum(v_val_x_i.values()), sum(v_val_x_j.values()))
     #print('In house Cost: ', Cost_dict["f1"])
@@ -200,7 +196,7 @@ def SetGrb_Obj(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, 
                 for m in range(Products):
                     ship_2 += Transportation_j_k[instance][m][j][k]*Z_jkm[s,m,j,k]
         
-        total_shipment += Probabilities[instance][s]*(ship_1 + ship_2)
+        total_shipment += (ship_1 + ship_2)
 
         # Production
         pr_cost = 0
@@ -208,7 +204,7 @@ def SetGrb_Obj(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, 
             for m in range(Products):
                 pr_cost += Manufacturing_costs[instance][i][m]*Q_im[s,m,i]
 
-        total_pr_cost += Probabilities[instance][s]*pr_cost        
+        total_pr_cost += pr_cost        
 
         #Lost Sales
         l_cost = 0
@@ -216,16 +212,16 @@ def SetGrb_Obj(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, 
             for m in range(Products):
                 l_cost += lost_sales[instance][k][m]*U_km[s,k,m]
 
-        total_l_cost += Probabilities[instance][s]*l_cost
+        total_l_cost += l_cost
 
     # Percentage of demand met
     rl_penalty = 0
     for s in range(num_Scenarios):
         for k in range(Market):
             for m in range(Products):
-                rl_penalty += Probabilities[instance][s]*lost_sales[instance][k][m]*w_s[s,k,m]*demand[instance][s][m][k]
+                rl_penalty += lost_sales[instance][k][m]*w_s[s,k,m]*demand[instance][s][m][k]
 
-    grb_expr += objWeights['f1']*(OC_1 + OC_2 + (total_shipment + total_pr_cost + total_l_cost)) + objWeights['f2']*rl_penalty
+    grb_expr += objWeights['f1']*(OC_1 + OC_2 + (total_shipment + total_pr_cost + total_l_cost)/num_Scenarios) + objWeights['f2']*rl_penalty/num_Scenarios
 
     grbModel.setObjective(grb_expr, GRB.MINIMIZE)
 
@@ -319,9 +315,9 @@ def get_rl_rate(w, instance, num_Scenarios, Market, Products):
     for s in range(num_Scenarios):
         for k in range(Market):
             for m in range(Products):
-                rl_penalty += Probabilities[instance][s]*lost_sales[instance][k][m]*w[s,k,m]*demand[instance][s][m][k]
+                rl_penalty += lost_sales[instance][k][m]*w[s,k,m]*demand[instance][s][m][k]
 
-    return(rl_penalty)
+    return(rl_penalty/num_Scenarios)
 
 def PrintToFileSummaryResults(rl):
     results_file = "/home/dkabe/Model_brainstorming/Output/results2.txt"
@@ -330,7 +326,6 @@ def PrintToFileSummaryResults(rl):
     ff.write(str(Summary_dict['ObjVal']) + '\t' + str(Cost_dict['f1']) + '\t' + str(Cost_dict['f3']) + '\t' + str(Cost_dict['f4']) + '\t')
     ff.write(str(Summary_dict['Demand_met']) + '\t')
     ff.write(str(Summary_dict['OpenMPs']) + '\t' + str(Summary_dict['OpenDCs']) + '\t')
-    ff.write(str(Summary_dict['CPU']))
     ff.write('\n')
     ff.close()
     return
