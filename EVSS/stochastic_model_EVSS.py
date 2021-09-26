@@ -8,8 +8,8 @@ import time
 import ast
 
 # Read input files
-#path = "C:/Users/Devika Kabe/Documents/Model_brainstorming/Input_Data/"
-path = "/home/dkabe/Model_brainstorming/Input_Data/Realistic/"
+#path = "C:/Users/Devika Kabe/Documents/SC_Resilience/Input_Data/"
+path = "/home/dkabe/SC_Resilience/Input_Data/Realistic/"
 p_failure = 0.1
 p_running = 1 - p_failure
 instances = 2
@@ -112,7 +112,7 @@ dic_grbOut = {}
 def InitializeModelParams(instance, s1, rl):
     global x_i
     global x_j
-    path = '/home/dkabe/Model_brainstorming/EVSS/First_Stage_Decisions/'
+    path = '/home/dkabe/SC_Resilience/EVSS/First_Stage_Decisions/'
     f = open(path + "Instance_" + str(instance + 1) + "/first_stage_" + str(s1) + "_" + str(rl) + ".txt", "r")
     text = f.read()
     f.close()
@@ -280,7 +280,7 @@ def ModelCons(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, M
     return
 
 def save_results(instance, rl):
-    f = open("/home/dkabe/Model_brainstorming/EVSS/V_Det/" + "Instance_" + str(instance + 1) + "/v_det_" + str(rl) + ".txt", "a")
+    f = open("/home/dkabe/SC_Resilience/EVSS/V_Det/" + "Instance_" + str(instance + 1) + "/v_det_" + str(rl) + ".txt", "a")
     f.write(str(Summary_dict['obj'])) 
     f.write('\n')
     f.close()

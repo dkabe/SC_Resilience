@@ -10,8 +10,8 @@ import itertools
 import ast 
 import os
 # Read input files
-#path = "C:/Users/Devika Kabe/Documents/Model_brainstorming/Input_Data/"
-path = "/home/dkabe/Model_brainstorming/Input_Data/Realistic/"
+#path = "C:/Users/Devika Kabe/Documents/SC_Resilience/Input_Data/"
+path = "/home/dkabe/SC_Resilience/Input_Data/Realistic/"
 p_failure = 0.1
 p_running = 1 - p_failure
 instances = 2
@@ -113,7 +113,7 @@ grbModel = Model('stochasticResil')
 def InitializeModelParams(num_Scenarios, Market, Products, batch):
     global Scenarios
     global demand
-    path = '/home/dkabe/Model_brainstorming/SAA_Analysis_v7/Instance_2/'
+    path = '/home/dkabe/SC_Resilience/SAA_Analysis_v7/Instance_2/'
     demand = np.loadtxt(path + 'Scen_demand/demand' + "_" + str(num_Scenarios) + "_" + str(batch) + '.txt').reshape(num_Scenarios, Products, Market)
 
     text_file = open(path + 'Scenarios/' + str(num_Scenarios) + '_' + str(batch) + '.txt', "r")
@@ -395,14 +395,14 @@ def get_rl_rate(w, instance, num_Scenarios, Market, Products):
     return(rl_penalty)
 
 def PrintToFileSummaryResults(num_Scenarios):
-    results_file = "/home/dkabe/Model_brainstorming/SAA_Analysis_v7/Instance_2/Objectives/" + str(num_Scenarios) + "_results" + ".txt"
+    results_file = "/home/dkabe/SC_Resilience/SAA_Analysis_v7/Instance_2/Objectives/" + str(num_Scenarios) + "_results" + ".txt"
     ff = open(results_file, "a")
     ff.write(str(Summary_dict['ObjVal']) + '\n')
     ff.close()
     return
 
 def SaveOpeningDecisions(num_Scenarios, batch):
-    results_file = "/home/dkabe/Model_brainstorming/SAA_Analysis_v7/Instance_2/Opening_Decisions/" + str(num_Scenarios) + "_scenarios/" + str(num_Scenarios) + "_" + str(batch) + "_opening_decisions" + ".txt"
+    results_file = "/home/dkabe/SC_Resilience/SAA_Analysis_v7/Instance_2/Opening_Decisions/" + str(num_Scenarios) + "_scenarios/" + str(num_Scenarios) + "_" + str(batch) + "_opening_decisions" + ".txt"
    
     ff = open(results_file, "w+")
     ff.write(str(v_val_x_i) + '\n')

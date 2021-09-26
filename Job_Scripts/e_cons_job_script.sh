@@ -6,4 +6,4 @@
 module load nixpkgs/16.09
 module load gurobi/9.0.1
 source ~/env_gurobi/bin/activate
-python /home/dkabe/Model_brainstorming/Epsilon_Constraint/Three_Objectives/run_epsilon_constraint.py
+python /home/dkabe/SC_Resilience/Epsilon_Constraint/Three_Objectives/run_epsilon_constraint.py

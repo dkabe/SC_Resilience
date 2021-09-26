@@ -11,8 +11,8 @@ import ast
 import os 
 
 # Read input files
-#path = "C:/Users/Devika Kabe/Documents/Model_brainstorming/Input_Data/"
-path = "/home/dkabe/Model_brainstorming/Input_Data/Realistic/"
+#path = "C:/Users/Devika Kabe/Documents/SC_Resilience/Input_Data/"
+path = "/home/dkabe/SC_Resilience/Input_Data/Realistic/"
 p_failure = 0.1
 p_running = 1 - p_failure
 instances = 2
@@ -127,7 +127,7 @@ grbModel = Model('stochasticResil')
 
 def InitializeModelParams(instance, rl):
     global z
-    temp_path = '/home/dkabe/Model_brainstorming/Epsilon_Constraint/Two_Objectives/Instance_' + str(instance + 1) + '/objective_results_' + str(instance + 1) + '_' + str(rl) + '.txt'
+    temp_path = '/home/dkabe/SC_Resilience/Epsilon_Constraint/Two_Objectives/Instance_' + str(instance + 1) + '/objective_results_' + str(instance + 1) + '_' + str(rl) + '.txt'
     z = np.loadtxt(temp_path)
    
 def SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, f1, f2):
@@ -460,7 +460,7 @@ def get_rl_rate(w, instance, num_Scenarios, Market, Products):
     return(rl_penalty)
 
 def PrintToFileSummaryResults(instance):
-    results_file = '/home/dkabe/Model_brainstorming/Epsilon_Constraint/Two_Objectives/objective_results_' + str(instance + 1) + '.txt'
+    results_file = '/home/dkabe/SC_Resilience/Epsilon_Constraint/Two_Objectives/objective_results_' + str(instance + 1) + '.txt'
     ff = open(results_file, "a")
     ff.write(str(Summary_dict['ObjVal']))
     ff.write('\n')
@@ -468,7 +468,7 @@ def PrintToFileSummaryResults(instance):
     return
 
 def SavePayoffTable(instance, rl):
-    results_file = '/home/dkabe/Model_brainstorming/Epsilon_Constraint/Two_Objectives/Instance_' + str(instance + 1) + '/payoff_results_' + str(instance + 1) + '_' + str(rl) +'.txt'
+    results_file = '/home/dkabe/SC_Resilience/Epsilon_Constraint/Two_Objectives/Instance_' + str(instance + 1) + '/payoff_results_' + str(instance + 1) + '_' + str(rl) +'.txt'
     ff = open(results_file, "a")
     ff.write(str(Summary_dict['ObjVal']))
     ff.write('\n')

@@ -10,8 +10,7 @@ import itertools
 import ast 
 
 # Read input files
-#path = "C:/Users/Devika Kabe/Documents/Model_brainstorming/Input_Data/"
-path = "/home/dkabe/Model_brainstorming/Input_Data/Realistic/"
+path = "/home/dkabe/SC_Resilience/Input_Data/Realistic/"
 p_failure = 0.1
 p_running = 1 - p_failure
 instances = 2
@@ -434,7 +433,7 @@ def save_v_values(instance, rl, save_results):
     if rl in [0.5, 0.75, 0.95]:
         save_results = 1
     if save_results:
-        ff = open("/home/dkabe/Model_brainstorming/Output/Variable_vals/" + "Instance_" + str(instance + 1) +  "/variable_vals_" + str(rl) + ".txt", "w+")
+        ff = open("/home/dkabe/SC_Resilience/Output/Variable_vals/" + "Instance_" + str(instance + 1) +  "/variable_vals_" + str(rl) + ".txt", "w+")
         for i in range(len(v_values)):
             if i != len(v_values) - 1:
                 ff.write(values[i] + " = " + str(v_values[i]) + '\n')
@@ -444,7 +443,7 @@ def save_v_values(instance, rl, save_results):
     return
 
 def PrintToFileSummaryResults(rl):
-    results_file = "/home/dkabe/Model_brainstorming/Output/results.txt"
+    results_file = "/home/dkabe/SC_Resilience/Output/results.txt"
     ff = open(results_file, "a")
     ff.write(str(rl) + '\t')
     ff.write(str(Summary_dict['ObjVal']) + '\t' + str(Cost_dict['f1']) + '\t' + str(Cost_dict['f2']) + '\t' + str(Cost_dict['f3']) + '\t' + str(Cost_dict['f4']) + '\t')

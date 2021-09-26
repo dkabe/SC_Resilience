@@ -6,4 +6,4 @@
 module load nixpkgs/16.09
 module load gurobi/9.0.1
 source ~/env_gurobi/bin/activate
-python /home/dkabe/Model_brainstorming/run_instances_all_2.py
+python /home/dkabe/SC_Resilience/run_instances_all_2.py

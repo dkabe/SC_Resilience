@@ -8,8 +8,8 @@ import time
 import ast
 
 # Read input files
-#path = "C:/Users/Devika Kabe/Documents/Model_brainstorming/Input_Data/"
-path = "/home/dkabe/Model_brainstorming/Input_Data/Realistic/"
+#path = "C:/Users/Devika Kabe/Documents/SC_Resilience/Input_Data/"
+path = "/home/dkabe/SC_Resilience/Input_Data/Realistic/"
 p_failure = 0.1
 p_running = 1 - p_failure
 instances = 2
@@ -299,7 +299,7 @@ def ModelCons_det(instance, rl, Manufacturing_plants, Distribution, Market, Prod
 def save_FirstStageDecisions(instance, s1, rl):
     values = ["v_val_x_i", "v_val_x_j"]
     v_values = [v_val_x_i, v_val_x_j]
-    ff = open("/home/dkabe/Model_brainstorming/EVSS/First_Stage_Decisions/" + "Instance_" + str(instance + 1) +  "/first_stage_" + str(s1) + "_" + str(rl) + ".txt", "w+")
+    ff = open("/home/dkabe/SC_Resilience/EVSS/First_Stage_Decisions/" + "Instance_" + str(instance + 1) +  "/first_stage_" + str(s1) + "_" + str(rl) + ".txt", "w+")
     for i in range(len(v_values)):
         if i != len(v_values) - 1:
             ff.write(str(v_values[i]) + '\n')
@@ -309,7 +309,7 @@ def save_FirstStageDecisions(instance, s1, rl):
     return
 
 def save_objectives(instance, rl):
-    ff = open("/home/dkabe/Model_brainstorming/EVSS/EVPI_objectives/" + "Instance_" + str(instance + 1) + "/objectives_" + str(rl) + ".txt", "a")
+    ff = open("/home/dkabe/SC_Resilience/EVSS/EVPI_objectives/" + "Instance_" + str(instance + 1) + "/objectives_" + str(rl) + ".txt", "a")
     ff.write(str(Summary_dict['Obj']))
     ff.write('\n')
     ff.close()

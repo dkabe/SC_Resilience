@@ -11,8 +11,8 @@ import ast
 import os 
 
 # Read input files
-#path = "C:/Users/Devika Kabe/Documents/Model_brainstorming/Input_Data/"
-path = "/home/dkabe/Model_brainstorming/Input_Data/Realistic/"
+#path = "C:/Users/Devika Kabe/Documents/SC_Resilience/Input_Data/"
+path = "/home/dkabe/SC_Resilience/Input_Data/Realistic/"
 p_failure = 0.1
 p_running = 1 - p_failure
 instances = 2
@@ -130,7 +130,7 @@ grbModel = Model('stochasticResil')
 
 def InitializeModelParams(instance, rl):
     global ranges
-    temp_path = '/home/dkabe/Model_brainstorming/Epsilon_Constraint/Two_Objectives/Instance_' + str(instance + 1) + '/Ranges/' + str(rl) + '_' + 'ranges.txt'
+    temp_path = '/home/dkabe/SC_Resilience/Epsilon_Constraint/Two_Objectives/Instance_' + str(instance + 1) + '/Ranges/' + str(rl) + '_' + 'ranges.txt'
     ranges = np.loadtxt(temp_path)
    
 def SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon, f1, f2, e_constraint):
@@ -478,7 +478,7 @@ def get_rl_rate(w, instance, num_Scenarios, Market, Products):
     return(rl_penalty)
 
 def PrintToFileSummaryResults(instance, rl):
-    results_file = '/home/dkabe/Model_brainstorming/Epsilon_Constraint/Two_Objectives/Instance_' + str(instance + 1) + '/e_cons_results_' + str(rl) + '.txt'
+    results_file = '/home/dkabe/SC_Resilience/Epsilon_Constraint/Two_Objectives/Instance_' + str(instance + 1) + '/e_cons_results_' + str(rl) + '.txt'
     ff = open(results_file, "a")
     ff.write(str(Cost_dict["f1"] + Cost_dict["f2"]) + '\t' + str(Cost_dict["f3"] + Cost_dict["f4"]))
     ff.write('\n')

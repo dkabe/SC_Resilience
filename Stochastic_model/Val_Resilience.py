@@ -11,8 +11,7 @@ import itertools
 import ast
 
 # Read input files
-#path = "C:/Users/Devika Kabe/Documents/Model_brainstorming/Input_Data/"
-path = "/home/dkabe/Model_brainstorming/Input_Data/Realistic/"
+path = "/home/dkabe/SC_Resilience/Input_Data/Realistic/"
 p_failure = 0.1
 p_running = 1 - p_failure
 instances = 2
@@ -320,7 +319,7 @@ def get_rl_rate(w, instance, num_Scenarios, Market, Products):
     return(rl_penalty/num_Scenarios)
 
 def PrintToFileSummaryResults(rl):
-    results_file = "/home/dkabe/Model_brainstorming/Output/results2.txt"
+    results_file = "/home/dkabe/SC_Resilience/Output/results2.txt"
     ff = open(results_file, "a")
     ff.write(str(rl) + '\t')
     ff.write(str(Summary_dict['ObjVal']) + '\t' + str(Cost_dict['f1']) + '\t' + str(Cost_dict['f3']) + '\t' + str(Cost_dict['f4']) + '\t')
