@@ -110,9 +110,6 @@ v_val_w = {}
 Cost_dict = {}
 Summary_dict = {}
 
-# Dictionary to weigh different objectives
-objWeights = {}
-
 # Dictionary to save values of each objectives
 dic_grbOut = {}
 
@@ -282,7 +279,7 @@ def SetGrb_Obj(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, 
             for m in range(Products):
                 rl_penalty += lost_sales[instance][k][m]*w_s[s,k,m]*demand[instance][s][m][k]
 
-    grb_expr += objWeights['f1']*(OC_1 + OC_2 + (total_shipment + total_pr_cost + total_b_cost + total_l_cost)/num_Scenarios) + objWeights['f2']*rl_penalty/num_Scenarios
+    grb_expr += (OC_1 + OC_2 + (total_shipment + total_pr_cost + total_b_cost + total_l_cost)/num_Scenarios) + rl_penalty/num_Scenarios
 
     grbModel.setObjective(grb_expr, GRB.MINIMIZE)
 
@@ -455,9 +452,8 @@ def PrintToFileSummaryResults(rl):
     return
 
 
-def run_Model(rl, instance=1, num_Scenarios=192, Manufacturing_plants=6, Distribution=4, Market=29, Products=3, Outsourced=3, epsilon=700000, objDict={'f1': 1, 'f2': 1}, save_results=0):
-    for key, value in objDict.items():
-        objWeights[key] = value
+def run_Model(rl, instance=1, num_Scenarios=192, Manufacturing_plants=6, Distribution=4, Market=29, Products=3, Outsourced=3, epsilon=700000, save_results=0):
+    
     start_time = time.time()
     SetGurobiModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced, epsilon)
     SolveModel(instance, rl, num_Scenarios, Manufacturing_plants, Distribution, Market, Products, Outsourced)
